@@ -1,0 +1,43 @@
+#!/bin/bash
+set -e
+
+ROOT="/Volumes/T9_Assa/Cours/M2/S2/Projet Long/Code"
+LOG="$ROOT/results/build_dssp_datasets_$(date +%Y%m%d_%H%M).log"
+
+cd "$ROOT"
+
+MODELS=("esmc_300m:Datasets/embeddings/full/esmc_300M.safetensors"
+        "esmc_600m:Datasets/embeddings/full/esmc_600M.safetensors"
+        "ankh2_large:Datasets/embeddings/full/ankh2_large.safetensors")
+
+DSSP_VARS="acc sec3 sec8"
+DSSP_DIR="Datasets/ATLAS/data"
+TRAIN_IDS="deciphering/id_train.txt"
+TEST_IDS="deciphering/id_test.txt"
+
+echo "[$(date)] Démarrage build datasets — DSSP (acc, sec3, sec8)" | tee -a "$LOG"
+
+for entry in "${MODELS[@]}"; do
+    EMB="${entry%%:*}"
+    EMB_FILE="${entry##*:}"
+
+    for Y in $DSSP_VARS; do
+        echo "[$(date)] === $EMB × $Y ===" | tee -a "$LOG"
+
+        python analysis/full_prot_emb_2g.py \
+            "$TRAIN_IDS" "$EMB_FILE" \
+            -emb "$EMB" --y "$Y" \
+            -dssp_dir "$DSSP_DIR" \
+            -md_dir "Datasets/ATLAS/labels_md" 2>&1 | tee -a "$LOG"
+
+        python analysis/full_prot_emb_2g.py \
+            "$TEST_IDS" "$EMB_FILE" \
+            -emb "$EMB" --y "$Y" \
+            -dssp_dir "$DSSP_DIR" \
+            -md_dir "Datasets/ATLAS/labels_md" 2>&1 | tee -a "$LOG"
+
+        echo "[$(date)] $EMB × $Y terminé" | tee -a "$LOG"
+    done
+done
+
+echo "[$(date)] Tous les datasets DSSP générés" | tee -a "$LOG"

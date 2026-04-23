@@ -32,7 +32,8 @@ MAX_ACC = {
 
 DSSP_METRICS = ['acc', 'sec3', 'sec8', 'aa']
 DYNAMICS_METRICS = ['rmsf', 'bfact', 'neq', 'bfact_norm']
-MEDIANS_MD_DATA = {'rmsf': 0.106, 'bfact': 19.64, 'bfact_norm': -0.257, 'neq': 1}
+# RMSF now in Å (ATLAS update 21/11/2025 — old value was 0.106 nm)
+MEDIANS_MD_DATA = {'rmsf': 1.06, 'bfact': 17.81, 'bfact_norm': -0.257, 'neq': 1.0}
 
 # Embedding dimensions (1G + 2G)
 EMB_DIMS = {
@@ -66,8 +67,8 @@ parser.add_argument('--y', choices=DSSP_METRICS + DYNAMICS_METRICS, default='acc
                     help='Target variable Y')
 parser.add_argument('-emb', choices=list(EMB_DIMS.keys()), default='esmc_300m',
                     help='Embedding model type')
-parser.add_argument('-dssp_dir', type=str, required=True,
-                    help='Directory containing {protein_id}_dssp.tsv files')
+parser.add_argument('-dssp_dir', type=str, required=False, default=None,
+                    help='Directory containing {protein_id}_dssp.tsv files (required for acc/sec3/sec8)')
 parser.add_argument('-md_dir', type=str, required=True,
                     help='Directory containing {protein_id}_prod_R1_merged.tsv files')
 args = parser.parse_args()
@@ -123,7 +124,7 @@ for prot_id in prot_ids:
         emb = emb.numpy()
 
     # Load DSSP and MD annotation files
-    dssp_path = os.path.join(args.dssp_dir, prot_id + '_dssp.tsv')
+    dssp_path = os.path.join(args.dssp_dir, prot_id + '_dssp.tsv') if args.dssp_dir else None
     md_path   = os.path.join(args.md_dir,   prot_id + '_prod_R1_merged.tsv')
 
     try:
@@ -135,11 +136,16 @@ for prot_id in prot_ids:
         continue
 
     # Validate sequence length matches embedding
+    # Allow DSSP to be shorter by ≤2 residues (terminal atoms often missing in MD PDB)
     if args.y in DSSP_METRICS:
-        if len(df_dssp['seq']) != emb.shape[0]:
-            print(f"  [SKIP] {prot_id}: DSSP length {len(df_dssp['seq'])} != emb {emb.shape[0]}")
+        dssp_len = len(df_dssp['seq'])
+        diff = emb.shape[0] - dssp_len
+        if diff < 0 or diff > 2:
+            print(f"  [SKIP] {prot_id}: DSSP length {dssp_len} vs emb {emb.shape[0]} (diff={diff})")
             skipped += 1
             continue
+        if diff > 0:
+            emb = emb[:dssp_len]  # truncate embedding to match DSSP
     else:  # DYNAMICS_METRICS
         if len(df_dyn['fasta_seq']) != emb.shape[0]:
             print(f"  [SKIP] {prot_id}: MD length {len(df_dyn['fasta_seq'])} != emb {emb.shape[0]}")
