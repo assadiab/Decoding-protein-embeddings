@@ -2,7 +2,7 @@
 
 **M2 Biologie-Informatique · Université Paris Cité · INSERM UMR_S1134**
 
-> Extending the work of Soufir et al. on protein language model embeddings to second-generation models ESM-C and Ankh2, with comparison against 1G baselines (ESM2, ProtT5, Ankh1G).
+> Extension du travail de Soufir et al. sur les embeddings de protéines aux modèles de deuxième génération ESM-C et Ankh2, avec comparaison aux baselines 1G (ESM2, ProtT5, Ankh1G).
 
 ---
 
@@ -12,55 +12,44 @@ Ce projet applique la méthodologie d'analyse des embeddings protéiques dévelo
 - **ESM-C** (300M et 600M) — EvolutionaryScale, déc. 2024
 - **Ankh2-Large** — Elnaggar / Rost Lab
 
-Les embeddings sont générés sur les protéines de la base **ATLAS** (1390 protéines avec simulations de dynamique moléculaire), puis utilisés pour prédire des propriétés structurales et dynamiques par résidu (RMSF, Neq, structure secondaire, accessibilité).
+Les embeddings sont générés sur les 1390 protéines de la base **ATLAS** (simulations de dynamique moléculaire), puis utilisés pour prédire des propriétés structurales et dynamiques par résidu (RMSF, Neq, Bfactor, structure secondaire, accessibilité).
 
 ---
 
-## 📊 Résultats (mis à jour au fil de l'avancement)
+## 📊 Résultats — Decision Tree (test set, F1 / MCC)
 
-### État d'avancement
+| Tâche | ESM-C 300M | ESM-C 600M | Ankh2-Large |
+|---|---|---|---|
+| RMSF (flexibilité) | 0.63 / 0.22 | 0.64 / 0.24 | **0.65 / 0.29** |
+| Neq (désordre) | 0.75 / 0.35 | 0.76 / 0.39 | **0.79 / 0.46** |
+| Bfactor | 0.69 / 0.17 | 0.68 / 0.17 | **0.70 / 0.17** |
+| Accessibilité solvant | 0.82 / 0.53 | 0.82 / 0.53 | **0.84 / 0.58** |
+| Structure secondaire 3 classes | 0.60 / 0.42 | 0.64 / 0.49 | **0.70 / 0.57** |
+| Structure secondaire 8 classes | 0.20 / 0.30 | 0.22 / 0.36 | **0.25 / 0.42** |
 
-| Tâche | Statut | Semaine |
-|---|---|---|
-| Setup environnement + pipeline | ✅ Complet | S1 |
-| API ATLAS — scripts de téléchargement | ✅ Complet | S1 |
-| Validation 3 modèles 2G (subset 20 protéines) | ✅ Complet | S1 |
-| Génération embeddings 1390 protéines (cluster SFBI) | 🔄 En cours | S2 |
-| Premières analyses DT/NN | ⏳ À faire | S2 |
-| Benchmark comparatif 2G vs 1G | ⏳ À faire | S2–S3 |
-| SHAP + interprétabilité | ⏳ À faire | S3 |
-| Rapport final | ⏳ À faire | S3–S4 |
-
-### Performances — à compléter (S2/S3)
-
-| Tâche | ESM-C 300M | ESM-C 600M | Ankh2 | ESM2 650M | ProtT5 | Ankh1G |
-|---|---|---|---|---|---|---|
-| RMSF (Spearman) | — | — | — | ref. Soufir | ref. Soufir | ref. Soufir |
-| Neq (Spearman) | — | — | — | ref. Soufir | ref. Soufir | ref. Soufir |
-| Sec. structure (F1) | — | — | — | ref. Soufir | ref. Soufir | ref. Soufir |
-| Solvent acc. (F1) | — | — | — | ref. Soufir | ref. Soufir | ref. Soufir |
+**Ankh2-Large domine sur toutes les tâches. ESM-C 600M > 300M surtout sur SS3/SS8.**
 
 ---
 
 ## 🗂️ Structure du repo
 
 ```
-├── scripts/                    # Pipeline de données
-│   ├── fetch_atlas_fasta.py    # Récupération séquences FASTA depuis RCSB PDB
-│   ├── download_atlas_data.py  # Téléchargement labels ATLAS (RMSF/Bfactor/Neq)
-│   ├── prepare_atlas_labels.py # Conversion labels vers format pipeline
-│   ├── cluster_setup.sh        # Setup PLM-API sur cluster SFBI
-│   └── slurm/                  # Jobs SLURM pour génération embeddings
-│       ├── run_esmc_300m.sh
-│       ├── run_esmc_600m.sh
-│       ├── run_ankh2.sh
-│       └── run_all.sh
-├── analysis/                   # Scripts et notebooks d'analyse
-│   ├── full_prot_emb_2g.py     # Adaptation du script Soufir pour modèles 2G
-│   └── notebooks/              # Jupyter notebooks (S2/S3)
-├── results/                    # Figures et tableaux (S3)
-│   └── figures/
-├── pixi.toml                   # Configuration environnement reproductible
+├── analysis/
+│   ├── full_prot_emb_2g.py     # Adaptation pipeline Soufir pour modèles 2G
+│   └── notebooks/              # Notebooks Jupyter (analyses interactives)
+├── scripts/
+│   ├── fetch_atlas_fasta.py    # Récupération FASTA depuis RCSB PDB
+│   ├── download_atlas_data.py  # Labels ATLAS (RMSF/Bfactor/Neq)
+│   ├── prepare_atlas_labels.py # Conversion labels
+│   ├── compute_dssp.py         # Calcul DSSP v4 sur PDB ATLAS
+│   ├── run_embeddings_m4.sh    # Génération embeddings sur Apple M4 (MPS)
+│   ├── build_all_datasets.sh   # CSV dynamics (rmsf, neq, bfact)
+│   ├── build_dssp_datasets.sh  # CSV structure (acc, sec3, sec8)
+│   └── run_analyses.sh         # DT sur toutes les variables
+├── results/
+│   ├── figures/                # Confusion matrices, arbres de décision
+│   └── dt_results_2g.csv       # Tableau métriques complet
+├── pixi.toml                   # Environnement reproductible
 └── README.md
 ```
 
@@ -70,34 +59,21 @@ Les embeddings sont générés sur les protéines de la base **ATLAS** (1390 pro
 
 ### Prérequis
 
-- Python 3.11
-- [pixi](https://pixi.sh) pour l'environnement d'analyse
-- [PLM-API](https://gitlab.dsimb.insern.fr/cretin/plm-api) pour la génération d'embeddings
-- Accès à la base [ATLAS](https://www.dsimb.insern.fr/ATLAS)
+- Python 3.11 + [pixi](https://pixi.sh)
+- [PLM-API](https://gitlab.dsimb.inserm.fr/cretin/plm-api) pour la génération d'embeddings
+- Accès à la base [ATLAS](https://www.dsimb.inserm.fr/ATLAS)
 
 ### 1. Installer l'environnement
 
 ```bash
-git clone https://github.com/assadiabo/plm-decoding-esmc-ankh2
-cd plm-decoding-esmc-ankh2
-
-# Environnement d'analyse
+git clone https://github.com/assadiab/projet_long
+cd projet_long
 pixi install
-
-# PLM-API (cloner séparément)
-git clone https://gitlab.dsimb.insern.fr/cretin/plm-api
-cd plm-api && pip install . && cd ..
 ```
 
 ### 2. Télécharger les données ATLAS
 
 ```bash
-# Séquences FASTA depuis RCSB PDB
-pixi run python scripts/fetch_atlas_fasta.py \
-    --id-files path/to/id_train.txt path/to/id_test.txt \
-    --out Datasets/ATLAS/atlas_sequences.fasta
-
-# Labels dynamiques depuis l'API ATLAS
 pixi run python scripts/download_atlas_data.py --workers 4
 pixi run python scripts/prepare_atlas_labels.py
 ```
@@ -105,25 +81,28 @@ pixi run python scripts/prepare_atlas_labels.py
 ### 3. Générer les embeddings
 
 ```bash
-# Local (test subset)
-plm-api/.venv/bin/plm-embeddings \
-    -i Datasets/ATLAS/atlas_sequences.fasta \
-    -o Datasets/embeddings/ -m esmc_300M
+# Sur Apple Silicon M4 (MPS)
+source plm-api/.venv/bin/activate
+bash scripts/run_embeddings_m4.sh
 
-# Cluster SFBI (production complète)
-bash scripts/cluster_setup.sh
-sbatch scripts/slurm/run_all.sh
+# Les 3 modèles tournent en ~8 min total sur M4
 ```
 
-### 4. Construire les datasets et lancer les analyses
+### 4. Calculer les DSSP
+
+```bash
+# dssp est déjà dans pixi.toml
+pixi run python scripts/compute_dssp.py
+# Génère Datasets/ATLAS/data/{protein_id}_dssp.tsv pour les 1390 protéines
+```
+
+### 5. Construire les datasets et lancer les analyses
 
 ```bash
 pixi shell
-python analysis/full_prot_emb_2g.py id_train.txt \
-    Datasets/embeddings/esmc_300M.safetensors \
-    -emb esmc_300m --y rmsf \
-    -dssp_dir Datasets/labels/dssp/ \
-    -md_dir Datasets/labels/md/
+bash scripts/build_all_datasets.sh      # dynamics : rmsf, neq, bfact
+bash scripts/build_dssp_datasets.sh     # structure : acc, sec3, sec8
+bash scripts/run_analyses.sh            # DT sur toutes les variables
 ```
 
 ---
@@ -132,14 +111,12 @@ python analysis/full_prot_emb_2g.py id_train.txt \
 
 | Modèle | Génération | Dimension | Statut |
 |---|---|---|---|
-| ESM-C 300M | 2G — cible | 960 | ✅ validé |
-| ESM-C 600M | 2G — cible | 1152 | ✅ validé |
-| Ankh2-Large | 2G — cible | 1536 | ✅ validé |
-| ESM2 650M | 1G — baseline | 1280 | ref. Soufir |
-| ESM2 3B | 1G — baseline | 2560 | ref. Soufir |
-| Ankh-Large | 1G — baseline | 1536 | ref. Soufir |
-| ProtT5-XL | 1G — baseline | 1024 | ref. Soufir |
-| Ankh3-Large | 3G — bonus | TBD | ⏳ S3 |
+| ESM-C 300M | 2G — cible | 960 | ✅ généré (1390 protéines) |
+| ESM-C 600M | 2G — cible | 1152 | ✅ généré (1390 protéines) |
+| Ankh2-Large | 2G — cible | 1536 | ✅ généré (1390 protéines) |
+| ESM2 650M | 1G — baseline | 1280 | réf. Soufir et al. |
+| Ankh-Large (1G) | 1G — baseline | 1536 | réf. Soufir et al. |
+| ProtT5-XL | 1G — baseline | 1024 | réf. Soufir et al. |
 
 ---
 
@@ -160,4 +137,4 @@ INSERM UMR_S1134 — Hôpital Necker, Paris
 
 ---
 
-*Dernière mise à jour : 16 avril 2026 — fin S1*
+*Dernière mise à jour : 23 avril 2026 — fin S3*
