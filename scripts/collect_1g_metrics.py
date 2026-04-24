@@ -24,7 +24,7 @@ print(f"Parsing {log_path.name}")
 text = log_path.read_text()
 
 rows = []
-header_re = re.compile(r"\[\S+ \S+\] === (\w+) × (\w+) \(dt\) ===")
+header_re = re.compile(r"\[.*?\] === (\w+) × (\w+) \(dt\) ===")
 f1_re = re.compile(r"F1 score:\s*([\d.]+)")
 mcc_re = re.compile(r"MCC:([\d.\-]+)")
 
