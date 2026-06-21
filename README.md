@@ -2,7 +2,7 @@
 
 **M2 Bioinformatics · Université Paris Cité · INSERM UMR_S1134**
 
-Do second-generation protein language models (ESM-C, Ankh2) better encode global protein properties than established baselines? We benchmark 6 PLMs on 5 global prediction tasks across 1,390 proteins from the ATLAS database — and find a surprising answer.
+Do second-generation protein language models (ESM-C, Ankh2) better encode global protein properties than established baselines? We benchmark 6 PLMs on 5 global prediction tasks across 1,390 proteins from the ATLAS database.
 
 ---
 
@@ -107,8 +107,8 @@ On per-residue tasks, **Ankh2-Large dominates** across all 6 variables.
 ### Setup
 
 ```bash
-git clone https://github.com/assadiab/protein-embeddings-atlas
-cd protein-embeddings-atlas
+git clone https://github.com/assadiab/Decoding-protein-embeddings
+cd Decoding-protein-embeddings
 pixi install
 ```
 
