@@ -25,7 +25,7 @@ ID_TEST = ROOT / "deciphering" / "id_test.txt"
 FIG = ROOT / "results" / "figures" / "global_class_distributions.png"
 
 TASKS = ["fold_label", "localization_class", "species_label",
-         "tm_label", "disorder_global", "acc_mean"]
+         "tm_label", "disorder_global", "acc_mean", "aggregation_score"]
 FOLD_KEEP = {"a", "b", "c", "d"}
 
 
@@ -62,7 +62,7 @@ def main():
     te_ids = [i for i in load_ids(ID_TEST) if i in df.index]
     df_tr, df_te = df.loc[tr_ids].reset_index(), df.loc[te_ids].reset_index()
 
-    fig, axes = plt.subplots(2, 3, figsize=(16, 9))
+    fig, axes = plt.subplots(2, 4, figsize=(20, 9))
     print("=== Distributions des classes (train / test) ===")
     for ax, task in zip(axes.ravel(), TASKS):
         ytr, yte = prep(df_tr, df_te, task)
@@ -86,6 +86,10 @@ def main():
             pte_pct = 100*cte.get(c, 0)/len(yte) if len(yte) else 0
             print(f"  {str(c):14s} train {ctr.get(c,0):4d} ({ptr_pct:4.1f}%) | "
                   f"test {cte.get(c,0):4d} ({pte_pct:4.1f}%)")
+
+    # masquer les panneaux inutilisés (7 tâches sur une grille 2x4)
+    for ax in axes.ravel()[len(TASKS):]:
+        ax.axis("off")
 
     plt.suptitle("Distribution des classes cibles — tâches globales", fontsize=14)
     plt.tight_layout()

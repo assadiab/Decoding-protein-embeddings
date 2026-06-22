@@ -26,7 +26,7 @@ OUT = RESULTS / "global_stats_comparison.csv"
 MODELS_2G = ["esmc_300M", "esmc_600M", "ankh2_large"]
 MODELS_1G = ["esm2_t33_650M_UR50D", "ankh_large", "prot_t5_xl_uniref50"]
 TASK_ORDER = ["fold_label", "localization_class", "species_label",
-              "tm_label", "disorder_global", "acc_mean"]
+              "tm_label", "disorder_global", "acc_mean", "aggregation_score"]
 
 
 def best_clf(agg, model, task):

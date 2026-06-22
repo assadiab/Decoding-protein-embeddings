@@ -39,6 +39,8 @@ CACHE_DIR = OUT_DIR / "cache"
 ATLAS_CACHE = CACHE_DIR / "atlas_metadata.json"
 UNIPROT_CACHE = CACHE_DIR / "uniprot.json"
 OUT_TSV = OUT_DIR / "atlas_global_labels.tsv"
+# Score d'agrégation (proxy structural type A3D) — produit par compute_aggregation.py
+AGG_TSV = OUT_DIR.parent / "aggregation" / "aggregation_scores.tsv"
 
 ATLAS_URL = "https://www.dsimb.inserm.fr/ATLAS/api/ATLAS/metadata/{}"
 UNIPROT_BATCH_URL = (
@@ -279,8 +281,22 @@ def main():
 
     keep_species = species_keep_set(atlas, ids)
 
+    # Scores d'agrégation (proxy A3D) si déjà calculés
+    agg = {}
+    if AGG_TSV.exists():
+        with AGG_TSV.open() as fh:
+            next(fh)
+            for line in fh:
+                p, s = line.rstrip("\n").split("\t")
+                agg[p] = s
+        print(f"[aggregation] {len(agg)} scores chargés depuis {AGG_TSV.name}")
+    else:
+        print(f"[aggregation] {AGG_TSV.name} absent — colonne NA "
+              f"(lancer scripts/compute_aggregation.py)")
+
     rows = []
-    stats = {"fold": 0, "tm": 0, "loc": 0, "disorder": 0, "acc": 0, "species": 0}
+    stats = {"fold": 0, "tm": 0, "loc": 0, "disorder": 0, "acc": 0,
+             "species": 0, "aggregation": 0}
     for pid in ids:
         meta = atlas.get(pid, {})
         up = uni_ids.get(pid)
@@ -292,6 +308,7 @@ def main():
         dis = mean_rmsf(pid)
         acc = mean_acc(pid)
         spc = species_label(meta, keep_species)
+        agg_s = agg.get(pid)
 
         if fold is not None: stats["fold"] += 1
         if tm is not None: stats["tm"] += 1
@@ -299,6 +316,7 @@ def main():
         if dis is not None: stats["disorder"] += 1
         if acc is not None: stats["acc"] += 1
         if spc is not None: stats["species"] += 1
+        if agg_s is not None: stats["aggregation"] += 1
 
         rows.append({
             "pdb_chain": pid,
@@ -309,10 +327,12 @@ def main():
             "disorder_global": f"{dis:.4f}" if dis is not None else "NA",
             "acc_mean": f"{acc:.4f}" if acc is not None else "NA",
             "species_label": spc if spc is not None else "NA",
+            "aggregation_score": agg_s if agg_s is not None else "NA",
         })
 
     cols = ["pdb_chain", "uniprot_id", "fold_label", "tm_label",
-            "localization_class", "disorder_global", "acc_mean", "species_label"]
+            "localization_class", "disorder_global", "acc_mean",
+            "species_label", "aggregation_score"]
     with OUT_TSV.open("w") as fh:
         fh.write("\t".join(cols) + "\n")
         for r in rows:

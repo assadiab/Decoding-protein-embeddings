@@ -54,10 +54,12 @@ TASKS = {
     "tm_label": "mcc",
     "disorder_global": "mcc",
     "acc_mean": "mcc",
+    "aggregation_score": "mcc",
 }
 
 LABEL_COLS = ["fold_label", "tm_label", "localization_class",
-              "disorder_global", "acc_mean", "species_label"]
+              "disorder_global", "acc_mean", "species_label",
+              "aggregation_score"]
 FOLD_KEEP = {"a", "b", "c", "d"}
 
 
@@ -112,14 +114,17 @@ def prepare_task(task, df_train, df_test, dim_cols):
         ytr = tr["tm_label"].astype(float).astype(int)
         yte = te["tm_label"].astype(float).astype(int)
 
-    elif task in ("disorder_global", "acc_mean"):
+    elif task in ("disorder_global", "acc_mean", "aggregation_score"):
         # Seuil de binarisation = MÉDIANE DU TRAIN (pas de fuite).
         # FIX 6 — seuils mesurés sur ce dataset :
-        #   disorder_global : médiane train ≈ 1.27 Å (RMSF moyen)
-        #   acc_mean        : médiane train ≈ 57.5 Å² (ASA ABSOLUE DSSP)
+        #   disorder_global  : médiane train ≈ 1.27 Å (RMSF moyen)
+        #   acc_mean         : médiane train ≈ 57.5 Å² (ASA ABSOLUE DSSP)
+        #   aggregation_score: médiane train ≈ -0.20 (proxy A3D, sans unité)
         # NB : acc_mean est l'ASA absolue, PAS la RSA relative — le seuil
         # littérature 0.35 RSA (Benhamouche) n'est donc pas directement
         # transposable. La médiane donne des classes ~50/50 (équilibre neutre).
+        # NB2 : aggregation_score est un proxy structural (Python 3), pas A3D
+        # natif — le seuil -0.7 d'A3D (Benhamouche) n'est pas transposable.
         tr = tr[tr[task] != "NA"]
         te = te[te[task] != "NA"]
         med = tr[task].astype(float).median()       # seuil = médiane TRAIN

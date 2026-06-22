@@ -29,7 +29,8 @@ ID_TEST = ROOT / "deciphering" / "id_test.txt"
 OUT_DIR = ROOT / "datasets_global"
 
 LABEL_COLS = ["fold_label", "tm_label", "localization_class",
-              "disorder_global", "acc_mean", "species_label"]
+              "disorder_global", "acc_mean", "species_label",
+              "aggregation_score"]
 
 # Tous les modèles disponibles (nom de fichier sans extension)
 ALL_MODELS = [

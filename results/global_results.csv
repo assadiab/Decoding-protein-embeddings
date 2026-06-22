@@ -17,6 +17,9 @@ esmc_300M,disorder_global,MLP,mcc,0.235,0.0878,0.2648,973,417
 esmc_300M,acc_mean,LogReg,mcc,0.6747,0.0753,0.7418,973,417
 esmc_300M,acc_mean,RF,mcc,0.6122,0.0846,0.6648,973,417
 esmc_300M,acc_mean,MLP,mcc,0.6853,0.0929,0.6835,973,417
+esmc_300M,aggregation_score,LogReg,mcc,0.5026,0.0826,0.4925,973,417
+esmc_300M,aggregation_score,RF,mcc,0.4284,0.0967,0.3884,973,417
+esmc_300M,aggregation_score,MLP,mcc,0.5195,0.0912,0.5489,973,417
 esmc_600M,fold_label,LogReg,f1_macro,0.6261,0.0499,0.6745,430,205
 esmc_600M,fold_label,RF,f1_macro,0.514,0.1169,0.4264,430,205
 esmc_600M,fold_label,MLP,f1_macro,0.5606,0.0854,0.6124,430,205
@@ -35,6 +38,9 @@ esmc_600M,disorder_global,MLP,mcc,0.2628,0.0936,0.2334,973,417
 esmc_600M,acc_mean,LogReg,mcc,0.6799,0.0675,0.6267,973,417
 esmc_600M,acc_mean,RF,mcc,0.6161,0.0701,0.6334,973,417
 esmc_600M,acc_mean,MLP,mcc,0.6578,0.0953,0.6643,973,417
+esmc_600M,aggregation_score,LogReg,mcc,0.5141,0.0944,0.5253,973,417
+esmc_600M,aggregation_score,RF,mcc,0.418,0.0881,0.4156,973,417
+esmc_600M,aggregation_score,MLP,mcc,0.5017,0.1115,0.4917,973,417
 ankh2_large,fold_label,LogReg,f1_macro,0.7258,0.0776,0.7469,430,205
 ankh2_large,fold_label,RF,f1_macro,0.4985,0.0704,0.5146,430,205
 ankh2_large,fold_label,MLP,f1_macro,0.69,0.0766,0.7081,430,205
@@ -53,6 +59,9 @@ ankh2_large,disorder_global,MLP,mcc,0.294,0.1242,0.3712,973,417
 ankh2_large,acc_mean,LogReg,mcc,0.6859,0.0713,0.729,973,417
 ankh2_large,acc_mean,RF,mcc,0.7093,0.0753,0.767,973,417
 ankh2_large,acc_mean,MLP,mcc,0.7228,0.0887,0.7515,973,417
+ankh2_large,aggregation_score,LogReg,mcc,0.4944,0.0952,0.5106,973,417
+ankh2_large,aggregation_score,RF,mcc,0.4026,0.092,0.3863,973,417
+ankh2_large,aggregation_score,MLP,mcc,0.4683,0.1084,0.4818,973,417
 esm2_t33_650M_UR50D,fold_label,LogReg,f1_macro,0.727,0.1021,0.7562,430,205
 esm2_t33_650M_UR50D,fold_label,RF,f1_macro,0.5095,0.0926,0.4764,430,205
 esm2_t33_650M_UR50D,fold_label,MLP,f1_macro,0.6364,0.1034,0.7048,430,205
@@ -71,6 +80,9 @@ esm2_t33_650M_UR50D,disorder_global,MLP,mcc,0.2846,0.0889,0.2604,973,417
 esm2_t33_650M_UR50D,acc_mean,LogReg,mcc,0.7216,0.0461,0.7075,973,417
 esm2_t33_650M_UR50D,acc_mean,RF,mcc,0.6509,0.0604,0.6608,973,417
 esm2_t33_650M_UR50D,acc_mean,MLP,mcc,0.6823,0.0728,0.7412,973,417
+esm2_t33_650M_UR50D,aggregation_score,LogReg,mcc,0.4653,0.1146,0.4913,973,417
+esm2_t33_650M_UR50D,aggregation_score,RF,mcc,0.4213,0.1186,0.4068,973,417
+esm2_t33_650M_UR50D,aggregation_score,MLP,mcc,0.535,0.1189,0.5249,973,417
 ankh_large,fold_label,LogReg,f1_macro,0.7311,0.068,0.7486,430,205
 ankh_large,fold_label,RF,f1_macro,0.5146,0.0945,0.497,430,205
 ankh_large,fold_label,MLP,f1_macro,0.6598,0.1095,0.7426,430,205
@@ -89,6 +101,9 @@ ankh_large,disorder_global,MLP,mcc,0.3146,0.1332,0.3645,973,417
 ankh_large,acc_mean,LogReg,mcc,0.6879,0.0842,0.7364,973,417
 ankh_large,acc_mean,RF,mcc,0.6726,0.0676,0.7342,973,417
 ankh_large,acc_mean,MLP,mcc,0.7008,0.0605,0.7112,973,417
+ankh_large,aggregation_score,LogReg,mcc,0.4854,0.0909,0.4577,973,417
+ankh_large,aggregation_score,RF,mcc,0.4478,0.0845,0.4026,973,417
+ankh_large,aggregation_score,MLP,mcc,0.4782,0.0804,0.4674,973,417
 prot_t5_xl_uniref50,fold_label,LogReg,f1_macro,0.7127,0.1001,0.763,430,205
 prot_t5_xl_uniref50,fold_label,RF,f1_macro,0.5476,0.0852,0.5374,430,205
 prot_t5_xl_uniref50,fold_label,MLP,f1_macro,0.6656,0.1245,0.6752,430,205
@@ -107,3 +122,6 @@ prot_t5_xl_uniref50,disorder_global,MLP,mcc,0.3385,0.1159,0.3491,973,417
 prot_t5_xl_uniref50,acc_mean,LogReg,mcc,0.7279,0.0763,0.7458,973,417
 prot_t5_xl_uniref50,acc_mean,RF,mcc,0.7276,0.0998,0.7638,973,417
 prot_t5_xl_uniref50,acc_mean,MLP,mcc,0.7552,0.0827,0.7266,973,417
+prot_t5_xl_uniref50,aggregation_score,LogReg,mcc,0.5209,0.1166,0.5113,973,417
+prot_t5_xl_uniref50,aggregation_score,RF,mcc,0.4773,0.1196,0.4683,973,417
+prot_t5_xl_uniref50,aggregation_score,MLP,mcc,0.528,0.125,0.5539,973,417
