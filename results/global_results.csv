@@ -5,6 +5,9 @@ esmc_300M,fold_label,MLP,f1_macro,0.5824,0.1021,0.538,430,205
 esmc_300M,localization_class,LogReg,f1_macro,0.4754,0.0685,0.4843,514,204
 esmc_300M,localization_class,RF,f1_macro,0.3901,0.0592,0.447,514,204
 esmc_300M,localization_class,MLP,f1_macro,0.4489,0.096,0.4664,514,204
+esmc_300M,species_label,LogReg,f1_macro,0.8444,0.112,0.8239,252,104
+esmc_300M,species_label,RF,f1_macro,0.7222,0.1954,0.7304,252,104
+esmc_300M,species_label,MLP,f1_macro,0.8354,0.1102,0.8142,252,104
 esmc_300M,tm_label,LogReg,mcc,0.3122,0.1671,0.2482,938,403
 esmc_300M,tm_label,RF,mcc,0.0,0.0,0.1759,938,403
 esmc_300M,tm_label,MLP,mcc,0.1001,0.1874,0.2517,938,403
@@ -20,6 +23,9 @@ esmc_600M,fold_label,MLP,f1_macro,0.5606,0.0854,0.6124,430,205
 esmc_600M,localization_class,LogReg,f1_macro,0.4786,0.0764,0.5206,514,204
 esmc_600M,localization_class,RF,f1_macro,0.4196,0.077,0.4642,514,204
 esmc_600M,localization_class,MLP,f1_macro,0.4914,0.0826,0.4513,514,204
+esmc_600M,species_label,LogReg,f1_macro,0.8208,0.0844,0.8766,252,104
+esmc_600M,species_label,RF,f1_macro,0.7719,0.1607,0.7497,252,104
+esmc_600M,species_label,MLP,f1_macro,0.8023,0.1127,0.833,252,104
 esmc_600M,tm_label,LogReg,mcc,0.3036,0.1406,0.2406,938,403
 esmc_600M,tm_label,RF,mcc,0.0,0.0,0.1759,938,403
 esmc_600M,tm_label,MLP,mcc,0.1525,0.2073,0.0,938,403
@@ -35,6 +41,9 @@ ankh2_large,fold_label,MLP,f1_macro,0.69,0.0766,0.7081,430,205
 ankh2_large,localization_class,LogReg,f1_macro,0.5188,0.0833,0.5691,514,204
 ankh2_large,localization_class,RF,f1_macro,0.3085,0.0935,0.4243,514,204
 ankh2_large,localization_class,MLP,f1_macro,0.4826,0.1032,0.474,514,204
+ankh2_large,species_label,LogReg,f1_macro,0.7726,0.146,0.8588,252,104
+ankh2_large,species_label,RF,f1_macro,0.3518,0.14,0.3982,252,104
+ankh2_large,species_label,MLP,f1_macro,0.5991,0.1405,0.8523,252,104
 ankh2_large,tm_label,LogReg,mcc,0.4153,0.1841,0.3399,938,403
 ankh2_large,tm_label,RF,mcc,0.0,0.0,0.1759,938,403
 ankh2_large,tm_label,MLP,mcc,-0.0025,0.0093,0.0,938,403
@@ -50,6 +59,9 @@ esm2_t33_650M_UR50D,fold_label,MLP,f1_macro,0.6364,0.1034,0.7048,430,205
 esm2_t33_650M_UR50D,localization_class,LogReg,f1_macro,0.4807,0.0735,0.4118,514,204
 esm2_t33_650M_UR50D,localization_class,RF,f1_macro,0.3625,0.0906,0.4117,514,204
 esm2_t33_650M_UR50D,localization_class,MLP,f1_macro,0.464,0.0847,0.4811,514,204
+esm2_t33_650M_UR50D,species_label,LogReg,f1_macro,0.7803,0.123,0.8503,252,104
+esm2_t33_650M_UR50D,species_label,RF,f1_macro,0.6633,0.1754,0.6988,252,104
+esm2_t33_650M_UR50D,species_label,MLP,f1_macro,0.7646,0.1413,0.7415,252,104
 esm2_t33_650M_UR50D,tm_label,LogReg,mcc,0.4147,0.1872,0.3234,938,403
 esm2_t33_650M_UR50D,tm_label,RF,mcc,0.0,0.0,0.249,938,403
 esm2_t33_650M_UR50D,tm_label,MLP,mcc,0.0722,0.1858,0.1978,938,403
@@ -65,6 +77,9 @@ ankh_large,fold_label,MLP,f1_macro,0.6598,0.1095,0.7426,430,205
 ankh_large,localization_class,LogReg,f1_macro,0.5124,0.0982,0.5715,514,204
 ankh_large,localization_class,RF,f1_macro,0.3264,0.0878,0.4267,514,204
 ankh_large,localization_class,MLP,f1_macro,0.4934,0.084,0.5003,514,204
+ankh_large,species_label,LogReg,f1_macro,0.7544,0.2109,0.7912,252,104
+ankh_large,species_label,RF,f1_macro,0.3403,0.131,0.3213,252,104
+ankh_large,species_label,MLP,f1_macro,0.5464,0.1313,0.701,252,104
 ankh_large,tm_label,LogReg,mcc,0.3259,0.184,0.2571,938,403
 ankh_large,tm_label,RF,mcc,0.0,0.0,0.1759,938,403
 ankh_large,tm_label,MLP,mcc,0.0,0.0,0.0,938,403
@@ -80,6 +95,9 @@ prot_t5_xl_uniref50,fold_label,MLP,f1_macro,0.6656,0.1245,0.6752,430,205
 prot_t5_xl_uniref50,localization_class,LogReg,f1_macro,0.4998,0.0847,0.5584,514,204
 prot_t5_xl_uniref50,localization_class,RF,f1_macro,0.3708,0.0875,0.4667,514,204
 prot_t5_xl_uniref50,localization_class,MLP,f1_macro,0.4956,0.1016,0.4511,514,204
+prot_t5_xl_uniref50,species_label,LogReg,f1_macro,0.8425,0.1075,0.8991,252,104
+prot_t5_xl_uniref50,species_label,RF,f1_macro,0.6544,0.1879,0.6581,252,104
+prot_t5_xl_uniref50,species_label,MLP,f1_macro,0.8218,0.1401,0.8535,252,104
 prot_t5_xl_uniref50,tm_label,LogReg,mcc,0.3961,0.1773,0.3705,938,403
 prot_t5_xl_uniref50,tm_label,RF,mcc,0.0,0.0,0.249,938,403
 prot_t5_xl_uniref50,tm_label,MLP,mcc,0.2315,0.2244,0.2577,938,403

@@ -49,6 +49,13 @@ UNIPROT_CHUNK = 100          # accessions par requête batch
 SLEEP_UNIPROT = 1.0          # 1 req/sec max (consigne)
 SLEEP_ATLAS = 0.25           # politesse envers l'API ATLAS
 
+# Espèce : on ne garde que les organismes ATLAS >= MIN_SPECIES protéines
+# (les autres -> "NA", droppés à l'entraînement, comme fold e/f/g).
+# Seuil retenu : 30 prot -> 4 classes (H. sapiens, E. coli, S. cerevisiae,
+# T. thermophilus). Choix documenté comme limite : ATLAS est centré sur
+# quelques organismes modèles.
+MIN_SPECIES = 30
+
 # Regroupement localisation UniProt -> 6 classes (cf. rapport Sofia p.9-10)
 # L'ordre de test compte : on prend la 1re localisation qui matche.
 LOC_RULES = [
@@ -110,6 +117,27 @@ def fetch_atlas(ids, cache):
         time.sleep(SLEEP_ATLAS)
     save_cache(ATLAS_CACHE, cache)
     return cache
+
+
+def species_keep_set(atlas, ids):
+    """Organismes ATLAS avec >= MIN_SPECIES protéines (sur l'ensemble des ids)."""
+    from collections import Counter
+    c = Counter()
+    for pid in ids:
+        o = atlas.get(pid, {}).get("organism")
+        if o and o != "-":
+            c[o] += 1
+    keep = {o for o, n in c.items() if n >= MIN_SPECIES}
+    print(f"[species] {len(keep)} classes >= {MIN_SPECIES} prot : "
+          f"{sorted(keep)}")
+    return keep
+
+
+def species_label(meta, keep):
+    o = meta.get("organism")
+    if o and o != "-" and o in keep:
+        return o
+    return None
 
 
 def scop_class(meta):
@@ -249,8 +277,10 @@ def main():
             uni_ids[pid] = up
     uniprot = fetch_uniprot(list(uni_ids.values()), load_cache(UNIPROT_CACHE))
 
+    keep_species = species_keep_set(atlas, ids)
+
     rows = []
-    stats = {"fold": 0, "tm": 0, "loc": 0, "disorder": 0, "acc": 0}
+    stats = {"fold": 0, "tm": 0, "loc": 0, "disorder": 0, "acc": 0, "species": 0}
     for pid in ids:
         meta = atlas.get(pid, {})
         up = uni_ids.get(pid)
@@ -261,12 +291,14 @@ def main():
         loc = map_localization(urec.get("loc")) if up else None
         dis = mean_rmsf(pid)
         acc = mean_acc(pid)
+        spc = species_label(meta, keep_species)
 
         if fold is not None: stats["fold"] += 1
         if tm is not None: stats["tm"] += 1
         if loc is not None: stats["loc"] += 1
         if dis is not None: stats["disorder"] += 1
         if acc is not None: stats["acc"] += 1
+        if spc is not None: stats["species"] += 1
 
         rows.append({
             "pdb_chain": pid,
@@ -276,10 +308,11 @@ def main():
             "localization_class": loc if loc is not None else "NA",
             "disorder_global": f"{dis:.4f}" if dis is not None else "NA",
             "acc_mean": f"{acc:.4f}" if acc is not None else "NA",
+            "species_label": spc if spc is not None else "NA",
         })
 
     cols = ["pdb_chain", "uniprot_id", "fold_label", "tm_label",
-            "localization_class", "disorder_global", "acc_mean"]
+            "localization_class", "disorder_global", "acc_mean", "species_label"]
     with OUT_TSV.open("w") as fh:
         fh.write("\t".join(cols) + "\n")
         for r in rows:

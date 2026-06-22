@@ -50,13 +50,14 @@ ALL_MODELS = [
 TASKS = {
     "fold_label": "f1_macro",
     "localization_class": "f1_macro",
+    "species_label": "f1_macro",
     "tm_label": "mcc",
     "disorder_global": "mcc",
     "acc_mean": "mcc",
 }
 
 LABEL_COLS = ["fold_label", "tm_label", "localization_class",
-              "disorder_global", "acc_mean"]
+              "disorder_global", "acc_mean", "species_label"]
 FOLD_KEEP = {"a", "b", "c", "d"}
 
 
@@ -99,6 +100,12 @@ def prepare_task(task, df_train, df_test, dim_cols):
         ytr = tr["localization_class"].map(fuse).astype(str)
         yte = te["localization_class"].map(fuse).astype(str)
 
+    elif task == "species_label":
+        # 4 espèces ATLAS >= 30 prot ; "NA" (autres organismes) droppé
+        tr = tr[tr["species_label"] != "NA"]
+        te = te[te["species_label"] != "NA"]
+        ytr, yte = tr["species_label"].astype(str), te["species_label"].astype(str)
+
     elif task == "tm_label":
         tr = tr[tr["tm_label"] != "NA"]
         te = te[te["tm_label"] != "NA"]
@@ -106,6 +113,13 @@ def prepare_task(task, df_train, df_test, dim_cols):
         yte = te["tm_label"].astype(float).astype(int)
 
     elif task in ("disorder_global", "acc_mean"):
+        # Seuil de binarisation = MÉDIANE DU TRAIN (pas de fuite).
+        # FIX 6 — seuils mesurés sur ce dataset :
+        #   disorder_global : médiane train ≈ 1.27 Å (RMSF moyen)
+        #   acc_mean        : médiane train ≈ 57.5 Å² (ASA ABSOLUE DSSP)
+        # NB : acc_mean est l'ASA absolue, PAS la RSA relative — le seuil
+        # littérature 0.35 RSA (Benhamouche) n'est donc pas directement
+        # transposable. La médiane donne des classes ~50/50 (équilibre neutre).
         tr = tr[tr[task] != "NA"]
         te = te[te[task] != "NA"]
         med = tr[task].astype(float).median()       # seuil = médiane TRAIN
@@ -139,6 +153,7 @@ def cv_scoring(metric):
 
 def run(models, tasks, n_splits):
     rows = []
+    fold_rows = []        # 1 ligne par (model, task, clf, fold)
     metric_score = {t: score_fn(m) for t, m in TASKS.items()}
 
     for model in models:
@@ -179,10 +194,16 @@ def run(models, tasks, n_splits):
                         "score_test": round(float(test_score), 4),
                         "n_train": len(ytr), "n_test": len(yte),
                     })
+                    for fi, sc in enumerate(cv):
+                        fold_rows.append({
+                            "model": model, "task": task, "clf": clf_name,
+                            "metric": metric, "fold": fi,
+                            "score_cv": round(float(sc), 4), "k": k,
+                        })
                 except Exception as e:
                     print(f"  [ERR] {clf_name}: {e}")
 
-    return rows
+    return rows, fold_rows
 
 
 def main():
@@ -198,7 +219,7 @@ def main():
     n_splits = 3 if quick else 15
 
     print(f"Modèles: {models}\nTâches: {tasks}\nCV: {n_splits}-fold")
-    rows = run(models, tasks, n_splits)
+    rows, fold_rows = run(models, tasks, n_splits)
 
     OUT_CSV.parent.mkdir(parents=True, exist_ok=True)
     cols = ["model", "task", "clf", "metric", "score_cv_mean",
@@ -208,6 +229,14 @@ def main():
         w.writeheader()
         w.writerows(rows)
     print(f"\n[OK] {len(rows)} lignes -> {OUT_CSV}")
+
+    fold_csv = OUT_CSV.parent / "global_results_per_fold.csv"
+    fcols = ["model", "task", "clf", "metric", "fold", "score_cv", "k"]
+    with fold_csv.open("w", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=fcols)
+        w.writeheader()
+        w.writerows(fold_rows)
+    print(f"[OK] {len(fold_rows)} lignes -> {fold_csv}")
 
 
 if __name__ == "__main__":

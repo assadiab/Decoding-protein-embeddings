@@ -8,8 +8,7 @@ ATLAS_downloads/
 *.pt
 *.tsv
 *.csv
-!results/dt_results_*.csv
-!results/global_results.csv
+!results/*.csv
 datasets_emb_*/
 .venv/
 .pixi/
