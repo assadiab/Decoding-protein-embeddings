@@ -2,7 +2,7 @@
 
 **M2 Bioinformatics · Université Paris Cité · INSERM UMR_S1134**
 
-Do second-generation protein language models (ESM-C, Ankh2) better encode global protein properties than established baselines? We benchmark 6 PLMs on 6 global prediction tasks across 1,390 proteins from the ATLAS database.
+Do second-generation protein language models (ESM-C, Ankh2) better encode global protein properties than established baselines? We benchmark 6 PLMs on 7 global prediction tasks across 1,390 proteins from the ATLAS database.
 
 ---
 
@@ -28,8 +28,11 @@ Best classifier per task, test set. Metric: **macro-F1** for multi-class tasks (
 | Transmembrane (MCC) | 0.252 | 0.241 | 0.340 | 0.323 | 0.257 | **0.370** | 1G ✓ (p=0.024) |
 | Global disorder (MCC) | 0.265 | 0.261 | 0.371 | 0.298 | 0.364 | 0.349 | 1G ✓ (p=0.020) |
 | Mean accessibility (MCC) | 0.742 | 0.664 | 0.767 | 0.741 | 0.736 | 0.764 | ns |
+| Aggregation propensity (MCC) | 0.549 | 0.525 | 0.511 | 0.525 | 0.467 | 0.554 | ns |
 
 *ns = not significant (p > 0.05, Mann-Whitney U on 15-fold CV scores). 2G vs 1G compares the mean of the three 2G models against the mean of the three 1G baselines.*
+
+> Aggregation propensity is a reproducible structural proxy (Kyte-Doolittle hydrophobicity + β-sheet propensity + solvent exposure from DSSP), not native Aggrescan3D — see Methods.
 
 ![2G vs 1G comparison](results/figures/global_2g_vs_1g.png)
 
