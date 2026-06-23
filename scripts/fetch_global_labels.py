@@ -1,26 +1,25 @@
 #!/usr/bin/env python3
-"""Construit les labels globaux (per-protéine) pour les 1390 protéines ATLAS.
+"""Build the global (per-protein) labels for the 1390 ATLAS proteins.
 
-Sortie : Datasets/ATLAS/global_labels/atlas_global_labels.tsv
-Colonnes : pdb_chain, uniprot_id, fold_label, tm_label, localization_class,
-           disorder_global, acc_mean
+Output: Datasets/ATLAS/global_labels/atlas_global_labels.tsv
+Columns: pdb_chain, uniprot_id, fold_label, tm_label, localization_class,
+         disorder_global, acc_mean, species_label, aggregation_score
 
-Sources :
-  - fold_label        : API ATLAS metadata → SCOP_ID[0][0] (classe a/b/c/d)
-  - tm_label          : UniProt REST → présence de features "Transmembrane" (binaire)
-  - localization_class: UniProt REST → SUBCELLULAR LOCATION, regroupé en 6 classes
-  - disorder_global   : mean(RMSF) depuis labels_md/{id}_prod_R1_merged.tsv
-  - acc_mean          : mean(acc) depuis data/{id}_dssp.tsv
+Sources:
+  - fold_label        : ATLAS metadata API -> SCOP_ID[0][0] (class a/b/c/d)
+  - tm_label          : UniProt REST -> presence of "Transmembrane" features (binary)
+  - localization_class: UniProt REST -> SUBCELLULAR LOCATION, grouped into 6 classes
+  - species_label     : ATLAS organism, kept if >= MIN_SPECIES proteins
+  - disorder_global   : mean(RMSF) from labels_md/{id}_prod_R1_merged.tsv
+  - acc_mean          : mean(acc) from data/{id}_dssp.tsv
+  - aggregation_score : structural A3D-like proxy (compute_aggregation.py)
 
-Note SCOP : le champ JSON `SCOP_class` est la chaîne descriptive
-("Alpha and beta proteins (a/b)"). La lettre de classe canonique a/b/c/d est
-le 1er token de `SCOP_ID` (ex "c.86.1.1" -> "c"). On utilise donc SCOP_ID.
+SCOP note: the JSON field `SCOP_class` is the descriptive string
+("Alpha and beta proteins (a/b)"). The canonical class letter a/b/c/d is the
+first token of `SCOP_ID` (e.g. "c.86.1.1" -> "c"), so we use SCOP_ID.
 
-aggregation_score est volontairement absent : pas de source sans Aggrescan3D
-local (mentionné comme limite dans le rapport).
-
-Le script est ré-exécutable : les réponses ATLAS et UniProt sont mises en cache
-sur disque pour éviter de re-télécharger à chaque run.
+Re-runnable: ATLAS and UniProt responses are cached on disk to avoid
+re-downloading on every run.
 """
 import json
 import sys
@@ -39,7 +38,7 @@ CACHE_DIR = OUT_DIR / "cache"
 ATLAS_CACHE = CACHE_DIR / "atlas_metadata.json"
 UNIPROT_CACHE = CACHE_DIR / "uniprot.json"
 OUT_TSV = OUT_DIR / "atlas_global_labels.tsv"
-# Score d'agrégation (proxy structural type A3D) — produit par compute_aggregation.py
+# Aggregation score (A3D-like structural proxy) produced by compute_aggregation.py
 AGG_TSV = OUT_DIR.parent / "aggregation" / "aggregation_scores.tsv"
 
 ATLAS_URL = "https://www.dsimb.inserm.fr/ATLAS/api/ATLAS/metadata/{}"
@@ -47,19 +46,18 @@ UNIPROT_BATCH_URL = (
     "https://rest.uniprot.org/uniprotkb/accessions"
     "?accessions={}&fields=accession,ft_transmem,cc_subcellular_location"
 )
-UNIPROT_CHUNK = 100          # accessions par requête batch
-SLEEP_UNIPROT = 1.0          # 1 req/sec max (consigne)
-SLEEP_ATLAS = 0.25           # politesse envers l'API ATLAS
+UNIPROT_CHUNK = 100          # accessions per batch request
+SLEEP_UNIPROT = 1.0          # 1 req/sec max
+SLEEP_ATLAS = 0.25           # be polite to the ATLAS API
 
-# Espèce : on ne garde que les organismes ATLAS >= MIN_SPECIES protéines
-# (les autres -> "NA", droppés à l'entraînement, comme fold e/f/g).
-# Seuil retenu : 30 prot -> 4 classes (H. sapiens, E. coli, S. cerevisiae,
-# T. thermophilus). Choix documenté comme limite : ATLAS est centré sur
-# quelques organismes modèles.
+# Species: keep only ATLAS organisms with >= MIN_SPECIES proteins
+# (others -> "NA", dropped at training time, like fold e/f/g).
+# Threshold 30 -> 4 classes (H. sapiens, E. coli, S. cerevisiae,
+# T. thermophilus). ATLAS is centered on a few model organisms.
 MIN_SPECIES = 30
 
-# Regroupement localisation UniProt -> 6 classes (cf. rapport Sofia p.9-10)
-# L'ordre de test compte : on prend la 1re localisation qui matche.
+# Group UniProt localization into 6 classes.
+# Order matters: the first matching localization wins.
 LOC_RULES = [
     ("membrane", ["membrane"]),
     ("nucleus", ["nucleus", "nuclear"]),
@@ -76,7 +74,7 @@ def load_ids():
             line = line.strip()
             if line:
                 ids.append(line)
-    # dédoublonnage en gardant l'ordre
+    # de-duplicate while preserving order
     return list(dict.fromkeys(ids))
 
 
@@ -102,7 +100,7 @@ def http_get_json(url, timeout=30):
 # ---------------------------------------------------------------------------
 def fetch_atlas(ids, cache):
     missing = [i for i in ids if i not in cache]
-    print(f"[ATLAS] {len(missing)} à récupérer ({len(ids) - len(missing)} en cache)")
+    print(f"[ATLAS] {len(missing)} to fetch ({len(ids) - len(missing)} cached)")
     for n, pid in enumerate(missing, 1):
         try:
             data = http_get_json(ATLAS_URL.format(pid))
@@ -122,7 +120,7 @@ def fetch_atlas(ids, cache):
 
 
 def species_keep_set(atlas, ids):
-    """Organismes ATLAS avec >= MIN_SPECIES protéines (sur l'ensemble des ids)."""
+    """ATLAS organisms with >= MIN_SPECIES proteins (over all ids)."""
     from collections import Counter
     c = Counter()
     for pid in ids:
@@ -130,7 +128,7 @@ def species_keep_set(atlas, ids):
         if o and o != "-":
             c[o] += 1
     keep = {o for o, n in c.items() if n >= MIN_SPECIES}
-    print(f"[species] {len(keep)} classes >= {MIN_SPECIES} prot : "
+    print(f"[species] {len(keep)} classes >= {MIN_SPECIES} proteins: "
           f"{sorted(keep)}")
     return keep
 
@@ -143,7 +141,7 @@ def species_label(meta, keep):
 
 
 def scop_class(meta):
-    """1er caractère du 1er SCOP_ID -> a/b/c/d. NaN sinon."""
+    """First character of the first SCOP_ID -> a/b/c/d, else None."""
     sid = meta.get("SCOP_ID")
     if isinstance(sid, list) and sid:
         first = str(sid[0]).strip()
@@ -158,7 +156,7 @@ def scop_class(meta):
 def fetch_uniprot(accessions, cache):
     todo = [a for a in accessions if a and a not in cache]
     todo = list(dict.fromkeys(todo))
-    print(f"[UniProt] {len(todo)} accessions à récupérer ({len(cache)} en cache)")
+    print(f"[UniProt] {len(todo)} accessions to fetch ({len(cache)} cached)")
     for i in range(0, len(todo), UNIPROT_CHUNK):
         chunk = todo[i:i + UNIPROT_CHUNK]
         url = UNIPROT_BATCH_URL.format(",".join(chunk))
@@ -169,7 +167,7 @@ def fetch_uniprot(accessions, cache):
                 acc = rec.get("primaryAccession")
                 if acc:
                     cache[acc] = parse_uniprot(rec)
-            # accessions sans résultat (obsolètes) -> marquer vide
+            # accessions with no result (obsolete) -> mark empty
             returned = {r.get("primaryAccession") for r in results}
             for a in chunk:
                 if a not in returned and a not in cache:
@@ -185,13 +183,13 @@ def fetch_uniprot(accessions, cache):
 
 
 def parse_uniprot(rec):
-    # tm_label : au moins une feature Transmembrane
+    # tm_label: at least one Transmembrane feature
     tm = 0
     for f in rec.get("features", []):
         if f.get("type") == "Transmembrane":
             tm = 1
             break
-    # localization : 1re SUBCELLULAR LOCATION
+    # localization: first SUBCELLULAR LOCATION
     loc = None
     for c in rec.get("comments", []):
         if c.get("commentType") == "SUBCELLULAR LOCATION":
@@ -216,7 +214,7 @@ def map_localization(loc):
 
 
 # ---------------------------------------------------------------------------
-# 3. disorder_global (mean RMSF) + acc_mean (mean acc DSSP)
+# 3. disorder_global (mean RMSF) + acc_mean (mean DSSP acc)
 # ---------------------------------------------------------------------------
 def mean_rmsf(pid):
     f = LABELS_MD / f"{pid}_prod_R1_merged.tsv"
@@ -265,13 +263,13 @@ def mean_acc(pid):
 # ---------------------------------------------------------------------------
 def main():
     ids = load_ids()
-    print(f"{len(ids)} protéines à traiter")
+    print(f"{len(ids)} proteins to process")
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
     atlas = fetch_atlas(ids, load_cache(ATLAS_CACHE))
 
-    # accessions UniProt depuis metadata ATLAS
+    # UniProt accessions from ATLAS metadata
     uni_ids = {}
     for pid in ids:
         up = atlas.get(pid, {}).get("UniProt")
@@ -281,7 +279,7 @@ def main():
 
     keep_species = species_keep_set(atlas, ids)
 
-    # Scores d'agrégation (proxy A3D) si déjà calculés
+    # Aggregation scores (A3D proxy) if already computed
     agg = {}
     if AGG_TSV.exists():
         with AGG_TSV.open() as fh:
@@ -289,10 +287,10 @@ def main():
             for line in fh:
                 p, s = line.rstrip("\n").split("\t")
                 agg[p] = s
-        print(f"[aggregation] {len(agg)} scores chargés depuis {AGG_TSV.name}")
+        print(f"[aggregation] {len(agg)} scores loaded from {AGG_TSV.name}")
     else:
-        print(f"[aggregation] {AGG_TSV.name} absent — colonne NA "
-              f"(lancer scripts/compute_aggregation.py)")
+        print(f"[aggregation] {AGG_TSV.name} missing — NA column "
+              f"(run scripts/compute_aggregation.py)")
 
     rows = []
     stats = {"fold": 0, "tm": 0, "loc": 0, "disorder": 0, "acc": 0,
@@ -338,8 +336,8 @@ def main():
         for r in rows:
             fh.write("\t".join(str(r[c]) for c in cols) + "\n")
 
-    print(f"\n[OK] {len(rows)} lignes -> {OUT_TSV}")
-    print("Couverture (non-NA) :")
+    print(f"\n[OK] {len(rows)} rows -> {OUT_TSV}")
+    print("Coverage (non-NA):")
     for k, v in stats.items():
         print(f"  {k:10s}: {v}/{len(ids)} ({100*v/len(ids):.1f}%)")
 

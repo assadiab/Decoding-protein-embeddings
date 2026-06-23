@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""FIX 5 — PCA & t-SNE 2D des embeddings mean-pooled (espace global).
+"""PCA & t-SNE 2D of the mean-pooled embeddings (global space).
 
-Montre que les embeddings par protéine s'organisent en clusters biologiques.
-Pour 2-3 modèles clés, projette les embeddings train en 2D (PCA puis t-SNE),
-coloriés par fold_label puis par tm_label.
+Shows that per-protein embeddings organize into biological clusters.
+For 2-3 key models, project the train embeddings in 2D (PCA then t-SNE),
+colored by fold_label then by tm_label.
 
-Sortie :
+Output:
   results/figures/global_pca_{model}_{label}.png
   results/figures/global_tsne_{model}_{label}.png
 
@@ -88,7 +88,7 @@ def main():
     FIG_DIR.mkdir(parents=True, exist_ok=True)
     for m in models:
         run_model(m)
-    print("\n[OK] FIX 5 terminé.")
+    print("\n[OK] done.")
 
 
 if __name__ == "__main__":

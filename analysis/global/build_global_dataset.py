@@ -1,18 +1,17 @@
 #!/usr/bin/env python3
-"""ÉTAPE 2 — Construit les datasets globaux (per-protéine) par mean pooling.
+"""Build the global (per-protein) datasets by mean pooling.
 
-Pour chaque modèle (safetensors), réduit chaque embedding [seq_len, dim] -> [dim]
-par mean pooling, joint avec atlas_global_labels.tsv sur pdb_chain, et écrit
-un CSV train + test selon le split deciphering/id_{train,test}.txt.
+For each model (safetensors), reduce each embedding [seq_len, dim] -> [dim] by
+mean pooling, join with atlas_global_labels.tsv on pdb_chain, and write a train +
+test CSV following the deciphering/id_{train,test}.txt split.
 
-Usage :
+Usage:
     python build_global_dataset.py [model_name ...]
-    # sans argument : tous les modèles
-    # ex : python build_global_dataset.py esmc_300M   (test subset)
+    # no argument: all models
+    # e.g. python build_global_dataset.py esmc_300M   (subset test)
 
-Sortie : datasets_global/{model}_train.csv et {model}_test.csv
-Colonnes : pdb_chain, dim_0..dim_{N-1}, fold_label, tm_label,
-           localization_class, disorder_global, acc_mean
+Output: datasets_global/{model}_train.csv and {model}_test.csv
+Columns: pdb_chain, dim_0..dim_{N-1}, then the label columns.
 """
 import sys
 import csv
@@ -32,7 +31,7 @@ LABEL_COLS = ["fold_label", "tm_label", "localization_class",
               "disorder_global", "acc_mean", "species_label",
               "aggregation_score"]
 
-# Tous les modèles disponibles (nom de fichier sans extension)
+# All available models (file name without extension)
 ALL_MODELS = [
     "esmc_300M", "esmc_600M", "ankh2_large",       # 2G
     "esm2_t33_650M_UR50D", "ankh_large", "prot_t5_xl_uniref50",  # 1G
@@ -55,7 +54,7 @@ def load_labels():
 def build_model(model, labels, train_ids, test_ids):
     emb_path = EMB_DIR / f"{model}.safetensors"
     if not emb_path.exists():
-        print(f"[SKIP] {model} : safetensors absent")
+        print(f"[SKIP] {model}: missing safetensors")
         return
 
     print(f"\n=== {model} ===")
@@ -85,7 +84,7 @@ def build_model(model, labels, train_ids, test_ids):
                           [labels[pid][c] for c in LABEL_COLS]
                     w.writerow(row)
                     written += 1
-            print(f"  {split_name}: {written} écrites, {len(skipped)} skippées "
+            print(f"  {split_name}: {written} written, {len(skipped)} skipped "
                   f"-> {out_csv.name}")
             for pid, reason in skipped:
                 print(f"    [SKIP] {pid} ({reason})")
@@ -99,7 +98,7 @@ def main():
     print(f"Labels: {len(labels)} | train: {len(train_ids)} | test: {len(test_ids)}")
     for model in models:
         build_model(model, labels, train_ids, test_ids)
-    print("\n[OK] Étape 2 terminée.")
+    print("\n[OK] done.")
 
 
 if __name__ == "__main__":

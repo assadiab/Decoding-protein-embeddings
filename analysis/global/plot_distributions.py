@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""FIX 4 — Distributions des classes cibles (train vs test) pour les tâches globales.
+"""Target class distributions (train vs test) for the global tasks.
 
-Justifie le choix de MCC sur les tâches déséquilibrées.
-Lit atlas_global_labels.tsv + le split deciphering, applique les mêmes
-préparations qu'à l'entraînement (filtre fold a/b/c/d, fusion mitochondrion,
-binarisation disorder/acc à la médiane TRAIN, filtre species 4 classes).
+Motivates the use of MCC on imbalanced tasks.
+Reads atlas_global_labels.tsv + the deciphering split, applies the same
+preparation as training (fold a/b/c/d filter, mitochondrion fusion,
+disorder/acc binarization at the TRAIN median, species 4-class filter).
 
-Sortie :
-  - results/figures/global_class_distributions.png  (multi-panneaux)
-  - texte : % par classe (train/test) pour le rapport
+Output:
+  - results/figures/global_class_distributions.png  (multi-panel)
+  - text: per-class % (train/test)
 """
 from pathlib import Path
 
@@ -48,7 +48,7 @@ def prep(df_tr, df_te, task):
     if task == "tm_label":
         tr = tr[tr.tm_label != "NA"]; te = te[te.tm_label != "NA"]
         return tr.tm_label.astype(float).astype(int), te.tm_label.astype(float).astype(int)
-    # disorder / acc : binarisation à la médiane TRAIN
+    # disorder / acc: binarization at the TRAIN median
     tr = tr[tr[task] != "NA"]; te = te[te[task] != "NA"]
     med = tr[task].astype(float).median()
     return ((tr[task].astype(float) > med).astype(int),
@@ -63,7 +63,7 @@ def main():
     df_tr, df_te = df.loc[tr_ids].reset_index(), df.loc[te_ids].reset_index()
 
     fig, axes = plt.subplots(2, 4, figsize=(20, 9))
-    print("=== Distributions des classes (train / test) ===")
+    print("=== Class distributions (train / test) ===")
     for ax, task in zip(axes.ravel(), TASKS):
         ytr, yte = prep(df_tr, df_te, task)
         ctr = ytr.value_counts().sort_index()
@@ -87,11 +87,11 @@ def main():
             print(f"  {str(c):14s} train {ctr.get(c,0):4d} ({ptr_pct:4.1f}%) | "
                   f"test {cte.get(c,0):4d} ({pte_pct:4.1f}%)")
 
-    # masquer les panneaux inutilisés (7 tâches sur une grille 2x4)
+    # hide unused panels (7 tasks on a 2x4 grid)
     for ax in axes.ravel()[len(TASKS):]:
         ax.axis("off")
 
-    plt.suptitle("Distribution des classes cibles — tâches globales", fontsize=14)
+    plt.suptitle("Target class distributions - global tasks", fontsize=14)
     plt.tight_layout()
     FIG.parent.mkdir(parents=True, exist_ok=True)
     plt.savefig(FIG, dpi=160, bbox_inches="tight")

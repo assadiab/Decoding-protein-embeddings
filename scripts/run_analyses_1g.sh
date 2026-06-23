@@ -1,5 +1,5 @@
 #!/bin/bash
-# Run DT analyses on all 1G baseline model × variable combinations.
+# Run DT analyses on all 1G baseline model x variable combinations.
 # Launch from project root: bash scripts/run_analyses_1g.sh
 set -e
 
@@ -12,7 +12,7 @@ cd "$ROOT/deciphering/scripts"
 
 VARS="rmsf neq bfact acc sec3 sec8"
 
-echo "[$(date)] Démarrage analyses DT 1G" | tee -a "$LOG"
+echo "[$(date)] Starting 1G DT analyses" | tee -a "$LOG"
 
 run_model() {
     local EMB="$1"
@@ -24,13 +24,13 @@ run_model() {
         TEST="../../datasets_emb_${EMB}/emb_all_positions_${Y}_test.csv"
 
         if [ ! -f "$TRAIN" ] || [ ! -f "$TEST" ]; then
-            echo "[$(date)] [SKIP] $EMB × $Y — CSV manquant" | tee -a "$LOG"
+            echo "[$(date)] [SKIP] $EMB x $Y - missing CSV" | tee -a "$LOG"
             continue
         fi
 
-        echo "[$(date)] === $EMB × $Y (dt) ===" | tee -a "$LOG"
+        echo "[$(date)] === $EMB x $Y (dt) ===" | tee -a "$LOG"
         python pca_full_prot.py "$TRAIN" "$TEST" --analysis dt 2>&1 | tee -a "$LOG"
-        echo "[$(date)] $EMB × $Y terminé" | tee -a "$LOG"
+        echo "[$(date)] $EMB x $Y done" | tee -a "$LOG"
 
         OUT_DIR="output_${EMB_UPPER}"
         if [ -d "$OUT_DIR" ]; then
@@ -46,4 +46,4 @@ run_model "esm33"  "esm2_650m"  "ESM33"
 run_model "ankhl"  "ankh_large" "ANKHL"
 run_model "t5"     "prot_t5"    "T5"
 
-echo "[$(date)] Toutes les analyses 1G terminées" | tee -a "$LOG"
+echo "[$(date)] All 1G analyses done" | tee -a "$LOG"

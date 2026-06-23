@@ -1,19 +1,19 @@
 """
 download_atlas_data.py
-Télécharge les données ATLAS (RMSF, Bfactor, Neq, PDB) depuis l'API ATLAS
-pour toutes les protéines listées dans id_train.txt / id_test.txt.
+Download ATLAS data (RMSF, Bfactor, Neq, PDB) from the ATLAS API
+for all proteins listed in id_train.txt / id_test.txt.
 
-Stratégie : télécharge le ZIP complet, extrait seulement les fichiers utiles
-(TSV + PDB), puis supprime le ZIP. Résultat : ~200KB par protéine.
+Strategy: download the full ZIP, extract only the useful files
+(TSV + PDB), then delete the ZIP. Result: ~200KB per protein.
 
 Usage :
-    # Subset test (20 premières protéines) :
+    # Test subset (first 20 proteins):
     python scripts/download_atlas_data.py --subset 20
 
-    # Complet (1390 protéines, ~40 min en parallèle) :
+    # Full (1390 proteins, ~40 min in parallel):
     python scripts/download_atlas_data.py
 
-    # Avec un seul fichier d'IDs :
+    # With a single ID file:
     python scripts/download_atlas_data.py --id-files deciphering/id_train.txt
 """
 
@@ -27,7 +27,7 @@ from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 ATLAS_API = "https://www.dsimb.inserm.fr/ATLAS/api/ATLAS/analysis/{pdb_chain}"
-# Fichiers à garder (les .xtc et .tpr font 40+ MB — on ne les veut pas)
+# Files to keep (.xtc and .tpr are 40+ MB - we do not want them)
 KEEP_SUFFIXES = ["_RMSF.tsv", "_Bfactor.tsv", "_Neq.tsv", ".pdb", "_corresp.tsv"]
 DEFAULT_ID_FILES = ["deciphering/id_train.txt", "deciphering/id_test.txt"]
 DEFAULT_OUT_DIR = "Datasets/ATLAS/data"

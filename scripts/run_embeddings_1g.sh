@@ -6,7 +6,7 @@ LOG="$ROOT/Datasets/embeddings/full/run_1g_$(date +%Y%m%d_%H%M).log"
 
 source "$ROOT/plm-api/.venv/bin/activate"
 
-echo "[$(date)] Démarrage génération embeddings 1G" | tee -a "$LOG"
+echo "[$(date)] Starting 1G embedding generation" | tee -a "$LOG"
 
 for MODEL in esm2_t33_650M_UR50D ankh_large prot_t5_xl_uniref50; do
     echo "[$(date)] === $MODEL ===" | tee -a "$LOG"
@@ -15,7 +15,7 @@ for MODEL in esm2_t33_650M_UR50D ankh_large prot_t5_xl_uniref50; do
         -o "$ROOT/Datasets/embeddings/full/" \
         -m "$MODEL" \
         --toks-per-batch 512 2>&1 | tee -a "$LOG"
-    echo "[$(date)] $MODEL terminé" | tee -a "$LOG"
+    echo "[$(date)] $MODEL done" | tee -a "$LOG"
 done
 
-echo "[$(date)] Tous les embeddings 1G générés" | tee -a "$LOG"
+echo "[$(date)] All 1G embeddings generated" | tee -a "$LOG"

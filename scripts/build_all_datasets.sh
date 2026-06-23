@@ -17,14 +17,14 @@ MD_DIR="Datasets/ATLAS/labels_md"
 TRAIN_IDS="deciphering/id_train.txt"
 TEST_IDS="deciphering/id_test.txt"
 
-echo "[$(date)] Démarrage build datasets — dynamics (rmsf, neq, bfact)" | tee -a "$LOG"
+echo "[$(date)] Starting dataset build - dynamics (rmsf, neq, bfact)" | tee -a "$LOG"
 
 for entry in "${MODELS[@]}"; do
     EMB="${entry%%:*}"
     EMB_FILE="${entry##*:}"
 
     for Y in $DYNAMICS_VARS; do
-        echo "[$(date)] === $EMB × $Y ===" | tee -a "$LOG"
+        echo "[$(date)] === $EMB x $Y ===" | tee -a "$LOG"
 
         python analysis/full_prot_emb_2g.py \
             "$TRAIN_IDS" "$EMB_FILE" \
@@ -36,8 +36,8 @@ for entry in "${MODELS[@]}"; do
             -emb "$EMB" --y "$Y" \
             -md_dir "$MD_DIR" 2>&1 | tee -a "$LOG"
 
-        echo "[$(date)] $EMB × $Y terminé" | tee -a "$LOG"
+        echo "[$(date)] $EMB x $Y done" | tee -a "$LOG"
     done
 done
 
-echo "[$(date)] Tous les datasets générés" | tee -a "$LOG"
+echo "[$(date)] All datasets generated" | tee -a "$LOG"

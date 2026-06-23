@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
-"""FIX 3 — Harmonise le pipeline per-résidu avec 3 classifieurs (LogReg/RF/MLP).
+"""Per-residue pipeline with 3 classifiers (LogReg / RF / MLP).
 
 Le pipeline local d'origine n'utilisait que le Decision Tree (dt_results_*.csv,
-conservé pour comparabilité avec Soufir). Ici on ajoute LogReg + RF + MLP sur les
-mêmes datasets per-résidu (datasets_emb_*/), pour aligner la méthodologie avec le
+kept for comparability with Soufir). Here we add LogReg + RF + MLP on the
+same per-residue datasets (datasets_emb_*/), to align the methodology with the
 pipeline global.
 
-Les datasets per-résidu sont volumineux (~230k résidus/tâche). Pour garder le
-temps raisonnable on **sous-échantillonne le TRAIN à SUBSAMPLE résidus** pour le
-CV et l'entraînement (documenté). L'évaluation finale se fait sur le **test set
-complet**.
+The per-residue datasets are large (~230k residues/task). To keep the
+runtime reasonable we **subsample the TRAIN to SUBSAMPLE residues** for
+CV and training. The final evaluation uses the **full test set**.
 
-Métrique : F1 (binaire pour rmsf/neq/bfact/acc, macro pour sec3/sec8) — même
-convention que dt_results_*.csv, pour comparabilité directe.
+Metric: F1 (binary for rmsf/neq/bfact/acc, macro for sec3/sec8) - same
+convention as dt_results_*.csv, for direct comparability.
 
-Sortie : results/local_results_full.csv
+Output: results/local_results_full.csv
     model | task | clf | metric | score_cv_mean | score_cv_std | score_test | n_train_sub | n_test
 
 Usage : python local_train_full.py [--quick] [--subsample N] [--folds K]
@@ -38,7 +37,7 @@ warnings.filterwarnings("ignore")
 ROOT = Path(__file__).resolve().parent.parent
 OUT_CSV = ROOT / "results" / "local_results_full.csv"
 
-# dossier datasets_emb_* -> nom de modèle propre (aligné sur global)
+# datasets_emb_* directory -> clean model name (aligned with global)
 MODELS = {
     "esmc_300m": "esmc_300M",
     "esmc_600m": "esmc_600M",
@@ -104,7 +103,7 @@ def main():
     sel_models = [a for a in argv if a in MODELS]
     model_dirs = sel_models if sel_models else list(MODELS.keys())
 
-    print(f"subsample={sub} folds={folds} modèles={model_dirs}")
+    print(f"subsample={sub} folds={folds} models={model_dirs}")
     rows = []
     for mdir in model_dirs:
         mname = MODELS[mdir]
@@ -114,12 +113,12 @@ def main():
             ftr = base / f"emb_all_positions_{task}_train.csv"
             fte = base / f"emb_all_positions_{task}_test.csv"
             if not ftr.exists() or not fte.exists():
-                print(f"  [SKIP] {task} : CSV manquant")
+                print(f"  [SKIP] {task}: missing CSV")
                 continue
             Xtr, ytr = load_xy(ftr, task, subsample=sub)
-            Xte, yte = load_xy(fte, task)              # test complet
+            Xte, yte = load_xy(fte, task)              # full test set
 
-            # encodage pour homogénéité (multiclasse string)
+            # encode for type homogeneity (multiclass string)
             le = LabelEncoder().fit(np.concatenate([ytr.astype(str), yte.astype(str)]))
             ytr_e, yte_e = le.transform(ytr.astype(str)), le.transform(yte.astype(str))
 

@@ -8,9 +8,9 @@
 #SBATCH --mem=48G
 #SBATCH --cpus-per-task=4
 
-# ── ESM-C 600M — ATLAS complet (1390 protéines) ──────────────────────────
-# Modèle plus lourd : 1152 dims, plus de mémoire GPU requise.
-# Réduire --toks-per-batch si OOM (essayer 1024 puis 512).
+# ESM-C 600M - full ATLAS (1390 proteins)
+# Heavier model: 1152 dims, more GPU memory required.
+# Reduce --toks-per-batch on OOM (try 1024 then 512).
 # ─────────────────────────────────────────────────────────────────────────
 
 set -euo pipefail

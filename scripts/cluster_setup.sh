@@ -1,11 +1,11 @@
 #!/bin/bash
-# ── Setup PLM-API sur le cluster SFBI ────────────────────────────────────
-# À lancer UNE SEULE FOIS depuis votre $HOME sur le cluster.
+# Setup PLM-API on the SFBI cluster
+# Run ONCE from your $HOME on the cluster.
 #
-# Pré-requis cluster :
-#   - Python 3.11 disponible (module load python/3.11 ou conda)
-#   - Git disponible
-#   - Accès internet (pour pip + HuggingFace)
+# Cluster prerequisites:
+#   - Python 3.11 available (module load python/3.11 or conda)
+#   - Git available
+#   - Internet access (for pip + HuggingFace)
 #
 # Usage :
 #   ssh user@sfbi-cluster
@@ -17,49 +17,49 @@ set -euo pipefail
 PROJECT_DIR="$HOME/plm-project"
 echo "=== Setup PLM project dans $PROJECT_DIR ==="
 
-# 1. Créer structure de dossiers
+# 1. Create directory structure
 mkdir -p "$PROJECT_DIR/Datasets/ATLAS"
 mkdir -p "$PROJECT_DIR/Datasets/embeddings"
 mkdir -p "$PROJECT_DIR/logs"
 
-# 2. Copier le repo (ou cloner depuis GitHub une fois public)
-#    Option A — copier depuis votre machine locale :
+# 2. Copy the repo (or clone from GitHub once public)
+#    Option A - copy from your local machine:
 #    rsync -av --exclude='.git' --exclude='.venv' --exclude='Datasets/embeddings' \
 #        /local/path/to/Code/ user@sfbi-cluster:$PROJECT_DIR/
 #
-#    Option B — cloner directement si le repo est sur GitLab/GitHub :
+#    Option B - clone directly if the repo is on GitLab/GitHub:
 #    git clone https://gitlab.com/... "$PROJECT_DIR"
 
 echo ""
-echo ">>> Étape manuelle : copier les fichiers via rsync ou git clone"
-echo ">>> Commande rsync depuis votre Mac :"
+echo ">>> Manual step: copy files via rsync or git clone"
+echo ">>> rsync command from your Mac:"
 echo "    rsync -av --exclude='.venv' --exclude='Datasets/embeddings' \\"
 echo "        '/Volumes/T9_Assa/Cours/M2/S2/Projet Long/Code/' \\"
 echo "        user@sfbi-cluster:$PROJECT_DIR/"
 echo ""
 
-# 3. Vérifier Python
+# 3. Check Python
 echo "=== Python version ==="
-python3 --version || { echo "ERREUR: python3 non disponible — charger le module"; exit 1; }
+python3 --version || { echo "ERROR: python3 not available - load the module"; exit 1; }
 
-# 4. Créer venv pour PLM-API
-echo "=== Création venv PLM-API ==="
+# 4. Create venv for PLM-API
+echo "=== Creating PLM-API venv ==="
 python3 -m venv "$PROJECT_DIR/plm-api/.venv"
 source "$PROJECT_DIR/plm-api/.venv/bin/activate"
 
 pip install --upgrade pip
 pip install -e "$PROJECT_DIR/plm-api/"
 
-echo "=== PLM-API installé ==="
+echo "=== PLM-API installed ==="
 plm-embeddings --list-models
 
-# 5. Vérifier que CUDA est disponible
+# 5. Check that CUDA is available
 python3 -c "import torch; print('CUDA:', torch.cuda.is_available(), '| GPU:', torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'N/A')"
 
 echo ""
-echo "=== Setup terminé ==="
+echo "=== Setup done ==="
 echo "Pour lancer les jobs :"
 echo "  cd $PROJECT_DIR && bash scripts/slurm/run_all.sh"
 echo ""
-echo "⚠️  Vérifier PROJECT_DIR dans les scripts SLURM avant de soumettre :"
+echo "Check PROJECT_DIR in the SLURM scripts before submitting:"
 echo "  grep PROJECT_DIR scripts/slurm/run_esmc_300M.sh"

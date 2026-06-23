@@ -1,18 +1,18 @@
 """
 prepare_atlas_labels.py
-Fusionne les TSV bruts d'ATLAS (RMSF, Bfactor, Neq) en un fichier
+Merge the raw ATLAS TSVs (RMSF, Bfactor, Neq) into a single file
 `{prot_id}_prod_R1_merged.tsv` au format attendu par full_prot_emb_2g.py.
 
-Format de sortie (colonnes) :
+Output format (columns):
   fasta_seq | RMSF | Bfactor | BfactorZscore | Neq
 
-- RMSF     = moyenne des 3 réplicats (RMSF_R1, RMSF_R2, RMSF_R3)
-- Bfactor  = valeur expérimentale brute (NaN si absent → sera ignoré par le pipeline)
-- BfactorZscore = (Bfactor - mean) / std, calculé sur les résidus avec B-factor valide
-- Neq      = moyenne des 3 réplicats (Neq_R1, Neq_R2, Neq_R3)
+- RMSF     = mean of the 3 replicates (RMSF_R1, RMSF_R2, RMSF_R3)
+- Bfactor  = raw experimental value (NaN if missing -> ignored by the pipeline)
+- BfactorZscore = (Bfactor - mean) / std, computed over residues with valid B-factor
+- Neq      = mean of the 3 replicates (Neq_R1, Neq_R2, Neq_R3)
 
 Usage :
-    # Traiter toutes les protéines dans Datasets/ATLAS/data/ :
+    # Process all proteins in Datasets/ATLAS/data/:
     python scripts/prepare_atlas_labels.py
 
     # Tester sur un subset :

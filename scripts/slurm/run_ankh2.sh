@@ -8,9 +8,9 @@
 #SBATCH --mem=48G
 #SBATCH --cpus-per-task=4
 
-# ── Ankh2-Large (ext2) — ATLAS complet (1390 protéines) ──────────────────
-# Modèle : ElnaggarLab/ankh2-ext2 — 1536 dims
-# ⚠️ C'est la variante ext2, pas le ankh2-large standard — à documenter
+# Ankh2-Large (ext2) - full ATLAS (1390 proteins)
+# Model: ElnaggarLab/ankh2-ext2 - 1536 dims
+# This is the ext2 variant, not the standard ankh2-large
 # ─────────────────────────────────────────────────────────────────────────
 
 set -euo pipefail

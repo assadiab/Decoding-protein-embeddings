@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""FIX 2 — Test statistique 2G vs 1G par tâche globale.
+"""Statistical test 2G vs 1G per global task.
 
-Pour chaque tâche, on rassemble les scores des 15 folds CV des 3 modèles 2G
-d'un côté, des 3 baselines 1G de l'autre (meilleur classifieur par modèle),
-et on teste si la différence est significative (Mann-Whitney U, bilatéral).
+For each task, gather the 15-fold CV scores of the 3 2G models
+on one side and the 3 1G baselines on the other (best classifier per model),
+and test whether the difference is significant (Mann-Whitney U, two-sided).
 
-Source : results/global_results_per_fold.csv (+ global_results.csv pour
-choisir le meilleur clf par modèle×tâche).
+Source: results/global_results_per_fold.csv (+ global_results.csv to
+pick the best clf per model x task).
 
-Sortie : results/global_stats_comparison.csv
+Output: results/global_stats_comparison.csv
     task | mean_2g | mean_1g | delta | p_value | significant
 """
 from pathlib import Path
@@ -37,7 +37,7 @@ def best_clf(agg, model, task):
 
 
 def fold_scores(perfold, agg, models, task):
-    """Concatène les scores par fold du meilleur clf de chaque modèle."""
+    """Concatenate the per-fold scores of the best clf of each model."""
     vals = []
     for m in models:
         clf = best_clf(agg, m, task)
@@ -66,10 +66,10 @@ def main():
         except ValueError:
             p = np.nan
         delta = s2.mean() - s1.mean()
-        sig = "oui" if (p == p and p < 0.05) else "non"
+        sig = "yes" if (p == p and p < 0.05) else "no"
         arrow = "2G>1G" if delta > 0 else "1G>2G"
         print(f"{task:20s} 2G={s2.mean():.3f} 1G={s1.mean():.3f} "
-              f"Δ={delta:+.3f} ({arrow}) p={p:.4f} sig={sig}")
+              f"delta={delta:+.3f} ({arrow}) p={p:.4f} sig={sig}")
         rows.append({
             "task": task,
             "mean_2g": round(float(s2.mean()), 4),

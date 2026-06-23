@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-"""ÉTAPE 4 — SHAP + drop curves sur le meilleur classifieur par (modèle, tâche).
+"""SHAP + drop curves on the best classifier per (model, task).
 
-Lit results/global_results.csv pour identifier le meilleur clf (score_test) par
-(model, task), ré-entraîne, puis :
-  - SHAP : top-20 dimensions les plus importantes -> results/figures/global_shap_{model}_{task}.png
-  - Drop curves : masque 0/25/50/75/90/95/100% des dimensions (3 répétitions),
-    trace le score vs % supprimé -> results/figures/global_drop_{model}_{task}.png
+Read results/global_results.csv to find the best clf (score_test) per
+(model, task), refits, then:
+  - SHAP: top-20 most important dimensions -> results/figures/global_shap_{model}_{task}.png
+  - Drop curves: mask 0/25/50/75/90/95/100% of dimensions (3 repeats),
+    plot score vs % removed -> results/figures/global_drop_{model}_{task}.png
 
-Pour limiter le coût, SHAP utilise un sous-échantillon du test set.
+To limit cost, SHAP uses a subsample of the test set.
 
-Usage :
+Usage:
     python shap_drop_global.py [model ...] [--tasks t1,t2]
-    # défaut : tous les modèles, toutes les tâches
+    # default: all models, all tasks
 """
 import sys
 from pathlib import Path
@@ -32,11 +32,11 @@ GLOBAL_CSV = RESULTS / "global_results.csv"
 
 DROP_FRACTIONS = [0.0, 0.25, 0.50, 0.75, 0.90, 0.95, 1.0]
 N_REPEAT = 3
-SHAP_SAMPLE = 150          # taille sous-échantillon pour SHAP
+SHAP_SAMPLE = 150          # subsample size for SHAP
 
 
 def best_clf_per_task(df):
-    """Retourne {(model, task): clf_name} d'après score_test max."""
+    """Return {(model, task): clf_name} by max score_test."""
     best = {}
     for (model, task), grp in df.groupby(["model", "task"]):
         row = grp.loc[grp["score_test"].idxmax()]
@@ -53,7 +53,7 @@ def shap_plot(clf, clf_name, Xtr, Xte, model, task):
         if clf_name == "RF":
             explainer = shap.TreeExplainer(clf)
             sv = explainer.shap_values(Xs)
-            # multiclasse -> liste ; moyenne sur classes
+            # multiclass -> list; mean over classes
             if isinstance(sv, list):
                 arr = np.mean([np.abs(s) for s in sv], axis=0)
             else:
@@ -72,12 +72,12 @@ def shap_plot(clf, clf_name, Xtr, Xte, model, task):
         print(f"    [SHAP ERR] {model}/{task}: {e}")
         return
 
-    mean_abs = arr.mean(axis=0)               # importance moyenne par dimension
+    mean_abs = arr.mean(axis=0)               # mean importance per dimension
     top = np.argsort(mean_abs)[::-1][:20]
     plt.figure(figsize=(7, 6))
     plt.barh([f"dim_{i}" for i in top][::-1], mean_abs[top][::-1], color="#4C72B0")
-    plt.xlabel("Importance SHAP moyenne (|valeur|)")
-    plt.title(f"SHAP top-20 — {model} · {task} ({clf_name})")
+    plt.xlabel("Mean SHAP importance (|value|)")
+    plt.title(f"SHAP top-20 - {model} - {task} ({clf_name})")
     plt.tight_layout()
     out = FIG_DIR / f"global_shap_{model}_{task}.png"
     plt.savefig(out, dpi=150)
@@ -96,7 +96,7 @@ def drop_curve(clf_factory, Xtr, ytr, Xte, yte, scorer, model, task):
             if n_drop == 0:
                 Xtr2, Xte2 = Xtr, Xte
             elif n_drop >= dim:
-                # tout masqué -> features à 0 (baseline aléatoire)
+                # all masked -> features set to 0 (random baseline)
                 Xtr2 = np.zeros_like(Xtr)
                 Xte2 = np.zeros_like(Xte)
             else:
@@ -116,9 +116,9 @@ def drop_curve(clf_factory, Xtr, ytr, Xte, yte, scorer, model, task):
     plt.figure(figsize=(7, 5))
     xs = [f * 100 for f in DROP_FRACTIONS]
     plt.errorbar(xs, means, yerr=stds, marker="o", capsize=3, color="#C44E52")
-    plt.xlabel("% dimensions masquées")
+    plt.xlabel("% dimensions masked")
     plt.ylabel(TASKS[task])
-    plt.title(f"Drop curve — {model} · {task}")
+    plt.title(f"Drop curve - {model} - {task}")
     plt.grid(alpha=0.3)
     plt.tight_layout()
     out = FIG_DIR / f"global_drop_{model}_{task}.png"
@@ -137,7 +137,7 @@ def main():
     models = argv if argv else ALL_MODELS
 
     if not GLOBAL_CSV.exists():
-        print("global_results.csv absent — lancer l'Étape 3 d'abord.")
+        print("global_results.csv missing - run training first.")
         sys.exit(1)
     df = pd.read_csv(GLOBAL_CSV)
     best = best_clf_per_task(df)
@@ -150,13 +150,13 @@ def main():
         for task in tasks:
             clf_name = best.get((model, task))
             if clf_name is None:
-                print(f"  [SKIP] {task} : pas de résultat")
+                print(f"  [SKIP] {task}: no result")
                 continue
             Xtr, ytr, Xte, yte = prepare_task(task, df_train, df_test, dim_cols)
             if len(ytr) < 30 or len(np.unique(ytr)) < 2:
-                print(f"  [SKIP] {task} : trop peu d'exemples")
+                print(f"  [SKIP] {task}: too few examples")
                 continue
-            print(f"  --- {task} (meilleur={clf_name}) ---")
+            print(f"  --- {task} (best={clf_name}) ---")
             clf = make_clfs()[clf_name]
             clf.fit(Xtr, ytr)
             shap_plot(clf, clf_name, Xtr, Xte, model, task)
@@ -164,7 +164,7 @@ def main():
             drop_curve(lambda: make_clfs()[clf_name], Xtr, ytr, Xte, yte,
                        scorer, model, task)
 
-    print("\n[OK] Étape 4 terminée.")
+    print("\n[OK] done.")
 
 
 if __name__ == "__main__":

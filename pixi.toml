@@ -5,24 +5,13 @@ name = "Code"
 platforms = ["osx-arm64"]
 version = "0.1.0"
 
-# ─── Architecture des envs ────────────────────────────────────────────────
-# Cet env pixi = analyse (deciphering/).  Pas besoin de charger des PLMs ici.
-# PLM-API a son propre pyproject.toml ; on l'installe via `pixi run install-plm-api`
-#  dans un venv séparé pour éviter les conflits ankh/sentencepiece.
-# ─────────────────────────────────────────────────────────────────────────
-
 [tasks]
-# Crée un venv dédié pour PLM-API et l'installe (run once)
 install-plm-api = { cmd = "python -m venv plm-api/.venv && plm-api/.venv/bin/pip install -e plm-api/", description = "Install PLM-API in its own venv" }
-# Smoke test ESM-C 300M sur la séquence exemple
 test-esmc = { cmd = "plm-api/.venv/bin/plm-embeddings -i plm-api/sequence.fasta -o Datasets/test_output/ -m esmc_300M --average-pool", description = "Test ESM-C 300M on sample sequence" }
 
 [dependencies]
-# Python 3.11 — wheels binaires disponibles pour toutes les dépendances
 python = "3.11.*"
 pytorch = ">=2.5.0,<3"
-
-# Stack analyse (deciphering/)
 numpy = ">=1.26,<3"
 pandas = ">=2.0"
 scikit-learn = ">=1.3"
@@ -36,7 +25,6 @@ graphviz = ">=12.0"
 python-graphviz = ">=0.20"
 
 [pypi-dependencies]
-# Lecture embeddings PLM-API + utilitaires légers (pas de modèles lourds ici)
 safetensors = ">=0.4.0"
 biopython = ">=1.85"
 rich = ">=13.0"

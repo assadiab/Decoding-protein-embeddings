@@ -1,23 +1,23 @@
 #!/usr/bin/env python3
-"""ÉTAPE 3 — Entraîne LogReg + RandomForest + MLP sur les datasets globaux.
+"""Train LogReg + RandomForest + MLP on the global datasets.
 
-Pour chaque (modèle × tâche × classifieur) :
+For each (model x task x classifier):
   - 15-fold stratified CV sur le train set
-  - évaluation finale sur le test set
-  - métrique : macro-F1 (fold, localization) ou MCC (tm, disorder, acc)
+  - final evaluation on the test set
+  - metric: macro-F1 (fold, localization) or MCC (tm, disorder, acc)
 
-Préparation par tâche (sans fuite — seuils calculés sur TRAIN uniquement) :
-  - fold_label        : garder a/b/c/d, dropper e/f/g et NA  (macro-F1)
-  - tm_label          : binaire 0/1, dropper NA              (MCC)
-  - localization_class: fusionner mitochondrion -> other, dropper NA (macro-F1)
-  - disorder_global   : binariser à la médiane du TRAIN      (MCC)
-  - acc_mean          : binariser à la médiane du TRAIN      (MCC)
+Per-task preparation (no leakage - thresholds computed on TRAIN only):
+  - fold_label        : keep a/b/c/d, drop e/f/g and NA      (macro-F1)
+  - tm_label          : binary 0/1, drop NA                  (MCC)
+  - localization_class: merge mitochondrion -> other, drop NA (macro-F1)
+  - disorder_global   : binarize at the TRAIN median         (MCC)
+  - acc_mean          : binarize at the TRAIN median         (MCC)
 
-Usage :
+Usage:
     python train_global_classifiers.py [model ...] [--tasks t1,t2] [--quick]
-    --quick : 3-fold au lieu de 15 (test rapide)
+    --quick : 3-fold instead of 15 (quick test)
 
-Sortie : results/global_results.csv
+Output: results/global_results.csv
     model | task | clf | metric | score_cv_mean | score_cv_std | score_test | n_train | n_test
 """
 import sys
@@ -78,15 +78,15 @@ def make_clfs():
 
 
 def load_split(model, split):
-    # keep_default_na=False : garder "NA" comme chaîne (sinon pandas -> NaN float)
+    # keep_default_na=False: keep "NA" as a string (otherwise pandas -> NaN float)
     df = pd.read_csv(DATA_DIR / f"{model}_{split}.csv", keep_default_na=False)
     dim_cols = [c for c in df.columns if c.startswith("dim_")]
     return df, dim_cols
 
 
 def prepare_task(task, df_train, df_test, dim_cols):
-    """Retourne X_train, y_train, X_test, y_test préparés pour la tâche.
-    Les seuils continus sont calculés sur le TRAIN uniquement."""
+    """Return X_train, y_train, X_test, y_test prepared for the task.
+    Continuous thresholds are computed on the TRAIN set only."""
     tr, te = df_train.copy(), df_test.copy()
 
     if task == "fold_label":
@@ -103,7 +103,7 @@ def prepare_task(task, df_train, df_test, dim_cols):
         yte = te["localization_class"].map(fuse).astype(str)
 
     elif task == "species_label":
-        # 4 espèces ATLAS >= 30 prot ; "NA" (autres organismes) droppé
+        # 4 ATLAS species >= 30 proteins; "NA" (other organisms) dropped
         tr = tr[tr["species_label"] != "NA"]
         te = te[te["species_label"] != "NA"]
         ytr, yte = tr["species_label"].astype(str), te["species_label"].astype(str)
@@ -115,19 +115,18 @@ def prepare_task(task, df_train, df_test, dim_cols):
         yte = te["tm_label"].astype(float).astype(int)
 
     elif task in ("disorder_global", "acc_mean", "aggregation_score"):
-        # Seuil de binarisation = MÉDIANE DU TRAIN (pas de fuite).
-        # FIX 6 — seuils mesurés sur ce dataset :
-        #   disorder_global  : médiane train ≈ 1.27 Å (RMSF moyen)
-        #   acc_mean         : médiane train ≈ 57.5 Å² (ASA ABSOLUE DSSP)
-        #   aggregation_score: médiane train ≈ -0.20 (proxy A3D, sans unité)
-        # NB : acc_mean est l'ASA absolue, PAS la RSA relative — le seuil
-        # littérature 0.35 RSA (Benhamouche) n'est donc pas directement
-        # transposable. La médiane donne des classes ~50/50 (équilibre neutre).
-        # NB2 : aggregation_score est un proxy structural (Python 3), pas A3D
-        # natif — le seuil -0.7 d'A3D (Benhamouche) n'est pas transposable.
+        # Thresholds measured on this dataset:
+        #   disorder_global  : train median ~ 1.27 A (mean RMSF)
+        #   acc_mean         : train median ~ 57.5 A^2 (ABSOLUTE DSSP ASA)
+        #   aggregation_score: train median ~ -0.20 (A3D proxy, unitless)
+        # NB: acc_mean is the absolute ASA, NOT the relative RSA - the
+        # literature 0.35 RSA (Benhamouche) is therefore not directly
+        # transposable. The median yields ~50/50 classes (neutral balance).
+        # NB2: aggregation_score is a structural proxy (Python 3), not native
+        # A3D - the A3D -0.7 threshold (Benhamouche) is not transposable.
         tr = tr[tr[task] != "NA"]
         te = te[te[task] != "NA"]
-        med = tr[task].astype(float).median()       # seuil = médiane TRAIN
+        med = tr[task].astype(float).median()       # threshold = TRAIN median
         ytr = (tr[task].astype(float) > med).astype(int)
         yte = (te[task].astype(float) > med).astype(int)
     else:
@@ -135,12 +134,12 @@ def prepare_task(task, df_train, df_test, dim_cols):
 
     Xtr = tr[dim_cols].to_numpy(dtype=np.float32)
     Xte = te[dim_cols].to_numpy(dtype=np.float32)
-    # Encodage entier des labels (fit sur train) : évite le bug MLP early_stopping
-    # avec labels string et homogénéise le typage.
+    # Integer-encode labels (fit on train): avoids the MLP early_stopping bug
+    # with string labels and homogenizes typing.
     ytr_s = np.asarray(ytr).astype(str)
     yte_s = np.asarray(yte).astype(str)
     le = LabelEncoder().fit(ytr_s)
-    # garder en test uniquement les classes vues en train
+    # keep in test only the classes seen in train
     seen = np.isin(yte_s, le.classes_)
     Xte, yte_s = Xte[seen], yte_s[seen]
     return Xtr, le.transform(ytr_s), Xte, le.transform(yte_s)
@@ -158,7 +157,7 @@ def cv_scoring(metric):
 
 def run(models, tasks, n_splits):
     rows = []
-    fold_rows = []        # 1 ligne par (model, task, clf, fold)
+    fold_rows = []        # one row per (model, task, clf, fold)
     metric_score = {t: score_fn(m) for t, m in TASKS.items()}
 
     for model in models:
@@ -173,10 +172,10 @@ def run(models, tasks, n_splits):
             print(f"\n--- {task} [{metric}] | train={len(ytr)} test={len(yte)} "
                   f"| {nclass} classes ---")
             if len(ytr) < 30 or nclass < 2:
-                print("  [SKIP] trop peu d'exemples / classes")
+                print("  [SKIP] too few examples / classes")
                 continue
 
-            # nb de folds limité par la plus petite classe
+            # number of folds limited by the smallest class
             min_class = np.min(np.bincount(
                 pd.factorize(ytr)[0]))
             k = max(2, min(n_splits, min_class))
@@ -223,7 +222,7 @@ def main():
     models = argv if argv else ALL_MODELS
     n_splits = 3 if quick else 15
 
-    print(f"Modèles: {models}\nTâches: {tasks}\nCV: {n_splits}-fold")
+    print(f"Models: {models}\nTasks: {tasks}\nCV: {n_splits}-fold")
     rows, fold_rows = run(models, tasks, n_splits)
 
     OUT_CSV.parent.mkdir(parents=True, exist_ok=True)

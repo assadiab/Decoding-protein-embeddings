@@ -15,14 +15,14 @@ DSSP_DIR="Datasets/ATLAS/data"
 TRAIN_IDS="deciphering/id_train.txt"
 TEST_IDS="deciphering/id_test.txt"
 
-echo "[$(date)] Démarrage build datasets — DSSP (acc, sec3, sec8)" | tee -a "$LOG"
+echo "[$(date)] Starting dataset build - DSSP (acc, sec3, sec8)" | tee -a "$LOG"
 
 for entry in "${MODELS[@]}"; do
     EMB="${entry%%:*}"
     EMB_FILE="${entry##*:}"
 
     for Y in $DSSP_VARS; do
-        echo "[$(date)] === $EMB × $Y ===" | tee -a "$LOG"
+        echo "[$(date)] === $EMB x $Y ===" | tee -a "$LOG"
 
         python analysis/full_prot_emb_2g.py \
             "$TRAIN_IDS" "$EMB_FILE" \
@@ -36,8 +36,8 @@ for entry in "${MODELS[@]}"; do
             -dssp_dir "$DSSP_DIR" \
             -md_dir "Datasets/ATLAS/labels_md" 2>&1 | tee -a "$LOG"
 
-        echo "[$(date)] $EMB × $Y terminé" | tee -a "$LOG"
+        echo "[$(date)] $EMB x $Y done" | tee -a "$LOG"
     done
 done
 
-echo "[$(date)] Tous les datasets DSSP générés" | tee -a "$LOG"
+echo "[$(date)] All DSSP datasets generated" | tee -a "$LOG"

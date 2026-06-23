@@ -43,7 +43,7 @@ while i < len(lines):
                 f1_vals.append(float(mf.group(1)))
             if mm:
                 mcc_vals.append(float(mm.group(1)))
-            if "terminé" in lines[j] and emb in lines[j] and task in lines[j]:
+            if "done" in lines[j] and emb in lines[j] and task in lines[j]:
                 break
         if len(f1_vals) >= 2 and len(mcc_vals) >= 2:
             rows.append({"model": model, "task": task, "split": "train",
